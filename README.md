@@ -50,41 +50,25 @@ relationship_ with the forked image.
 Forking promotes creativity and original content creation because it reduces
 friction to produce new animations.
 
+## Palette
+
+A color palette is a list that contains the 16 colors that can be displayed in a
+frame. Color indexes in a frame reference colors in the palette.
+
+An animation must define a _global color palette_, used by all frames.
+
+Frames can define a _local color palette_. In frames with a local color palette,
+local palette colors override those in the global palette.
+
 ## Colors
 
 The 16 colors of a palette can be chosen from the 24-bit RGB color space.
 
-Depending on how transparency is encoded, colors might have a transparency flag.
-
 ## Transparency
 
-Transparency can be encoded either as the absence of color in a pixel, that is a
-pixel without any color information, or as part of the color information of a
-pixel.
-
-### Transparency as the absence of color
-
-This approach allows to use all 16 colors of a palette for visible colors.
-
-Pros:
-
-- All color information is retained
-
-Cons:
-
-- Inconsistent encoding of colors in the frame
-
-### Transparency as part of the color information
-
-If a palette color is flagged as transparent it won't be visible in the frame.
-
-Pros:
-
-- Consistent encoding of colors in the frame
-
-Cons:
-
-- Color information is discarded
+Each frame contains metadata about transparency, divided into a _transparency
+flag_ and _transparency index_. If the transparency flag is set to true, the
+transparency index is the transparent color index in the palette.
 
 ## Optional features
 
