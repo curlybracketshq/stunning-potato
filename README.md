@@ -6,7 +6,7 @@ stored on the Ethereum blockchain and it's backed by non-fungible tokens (NFT).
 
 ## Table of contents <!-- omit in toc -->
 
-- [1. Project inspiration: Draw!](#1-project-inspiration-draw)
+- [1. Project inspiration](#1-project-inspiration)
   - [1.1. Similarities with Draw!](#11-similarities-with-draw)
   - [1.2. Differences from Draw!](#12-differences-from-draw)
 - [2. Data storage](#2-data-storage)
@@ -34,7 +34,7 @@ stored on the Ethereum blockchain and it's backed by non-fungible tokens (NFT).
   - [13.1. Project name proposals](#131-project-name-proposals)
   - [13.2. TODO](#132-todo)
 
-## 1. Project inspiration: Draw!
+## 1. Project inspiration
 
 This project takes inspiration from [Draw!](http://drawbang.com), a web based
 pixel art editor capable of generating 16x16 pixel animations.
@@ -51,8 +51,8 @@ Animations are constrained to have at most 16 frames.
 The animation editor is very similar, apart from the color palette management,
 that is missing from Draw!.
 
-Existing animations can be used as [templates](#forks-aka-stems-derivatives) for
-creating new content.
+Existing animations can be used as [templates](#7-forks-aka-stems-derivatives)
+for creating new content.
 
 ### 1.2. Differences from Draw!
 
@@ -62,8 +62,8 @@ application that stores data on AWS S3 and metadata in a Redis database.
 
 Draw! animations can use at most 16 colors chosen from the standard EGA palette.
 Stunning Potato's animation format relaxes this constraint. Each frame can
-define a custom [16 colors palette](#palette) chosen from the standard
-[6-bit EGA color space](#colors).
+define a custom [16 colors palette](#4-palette) chosen from the standard
+[6-bit EGA color space](#5-colors).
 
 Each frame and animation generated using the dapp is unique. This is not the
 case with Draw!, where the app allows the creation of duplicate content.
@@ -110,11 +110,11 @@ All frames have a fixed size of 16x16 pixels.
 
 Transparency metadata includes a _transparency flag_ and _transparency index_.
 For more information about transparency metadata go to
-[Transparency](#transparency).
+[Transparency](#6-transparency).
 
 All frames have a fixed color palette size of 16 colors. For more information
-about colors go to [Colors](#colors). For more information about color palettes
-go to [Palette](#palette).
+about colors go to [Colors](#5-colors). For more information about color
+palettes go to [Palette](#4-palette).
 
 Frames include references to:
 
@@ -122,7 +122,7 @@ Frames include references to:
 - forks
 - animations containing the frame
 
-For more information about forks go to [Forks](#forks-aka-stems-derivatives).
+For more information about forks go to [Forks](#7-forks-aka-stems-derivatives).
 
 ### 3.2. Animations
 
@@ -157,7 +157,7 @@ Animations include references to:
 - parent (forked) animation
 - forks
 
-For more information about forks go to [Forks](#forks-aka-stems-derivatives).
+For more information about forks go to [Forks](#7-forks-aka-stems-derivatives).
 
 ## 4. Palette
 
