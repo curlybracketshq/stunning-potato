@@ -27,7 +27,7 @@ describe("StunningPotato", function () {
   });
 
   it("Should create a new frame", async function () {
-    const frameData = "0xabcdef";
+    const frameData = `0x${"0".repeat(280)}`;
     const createFrameTx = await stunningPotato.createFrame(
       addr1.address,
       frameData
@@ -52,8 +52,15 @@ describe("StunningPotato", function () {
     expect(amount.toString()).to.equal('3');
   });
 
-  it("Should reject duplicate frames", async function () {
+  it("Should reject invalid frame data", async function () {
     const frameData = "0xabcdef";
+    await expect(
+      stunningPotato.createFrame(addr1.address, frameData)
+    ).to.be.revertedWith("Data must be valid");
+  });
+
+  it("Should reject duplicate frames", async function () {
+    const frameData = `0x${"0".repeat(280)}`;
     const createFrameTx = await stunningPotato.createFrame(
       addr1.address,
       frameData

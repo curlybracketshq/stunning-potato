@@ -63,6 +63,8 @@ contract StunningPotato is
         public
         returns (uint256)
     {
+        require(_isFrameDataValid(data), "Data must be valid");
+
         uint256 tokenId = uint256(keccak256(data));
         _safeMint(author, tokenId);
 
@@ -70,6 +72,21 @@ contract StunningPotato is
         _authors[tokenId] = author;
 
         return tokenId;
+    }
+
+    /**
+     * Returns whether the frame data in input is valid.
+     *
+     * See the "Frame format specification" section in the project README for
+     * more information about the frame data spec.
+     */
+    function _isFrameDataValid(bytes calldata data)
+        private
+        pure
+        returns (bool)
+    {
+        // Any 140 bytes array can be interpreted as a frame
+        return data.length == 140;
     }
 
     /**
