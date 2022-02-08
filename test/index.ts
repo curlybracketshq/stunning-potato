@@ -45,6 +45,11 @@ describe("StunningPotato", function () {
     ).to.equal(`https://ethga.xyz/t/${tokenId}`);
 
     expect(await stunningPotato.tokenData(tokenId)).to.equal(frameData);
+
+    const salePrice = 99;
+    const [receiver, amount] = await stunningPotato.royaltyInfo(tokenId, salePrice);
+    expect(receiver).to.equal(addr1.address);
+    expect(amount.toString()).to.equal('3');
   });
 
   it("Should reject duplicate frames", async function () {

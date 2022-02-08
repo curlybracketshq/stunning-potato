@@ -5,10 +5,17 @@ import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract StunningPotato is ERC721, ERC721Enumerable, Pausable, Ownable {
+contract StunningPotato is
+    ERC721,
+    ERC721Enumerable,
+    Pausable,
+    Ownable,
+    IERC2981
+{
     // Enum representing resource types
     enum ResourceType {
         Frame,
@@ -22,8 +29,14 @@ contract StunningPotato is ERC721, ERC721Enumerable, Pausable, Ownable {
         bytes data;
     }
 
+    // Default royalty percentage for authors
+    uint8 private constant DEFAULT_ROYALTY_PERCENTAGE = 4;
+
     // Mapping from token ID to resources
     mapping(uint256 => Resource) private _resources;
+
+    // Mapping from token ID to the original author
+    mapping(uint256 => address) private _authors;
 
     constructor() ERC721("EthGA", "EGA") {}
 
@@ -51,6 +64,7 @@ contract StunningPotato is ERC721, ERC721Enumerable, Pausable, Ownable {
         _safeMint(author, tokenId);
 
         _resources[tokenId] = Resource(ResourceType.Frame, data);
+        _authors[tokenId] = author;
 
         return tokenId;
     }
@@ -72,14 +86,33 @@ contract StunningPotato is ERC721, ERC721Enumerable, Pausable, Ownable {
         return _resources[tokenId].data;
     }
 
+    /**
+     * @inheritdoc IERC2981
+     */
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+        external
+        view
+        virtual
+        override
+        returns (address, uint256)
+    {
+        require(_exists(tokenId), "Royalty info for nonexistent token");
+
+        uint256 royaltyAmount = (salePrice * DEFAULT_ROYALTY_PERCENTAGE) / 100;
+
+        return (_authors[tokenId], royaltyAmount);
+    }
+
     // The following functions are overrides required by Solidity.
 
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable)
+        override(ERC721, ERC721Enumerable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IERC2981).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }
