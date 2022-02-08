@@ -1,11 +1,14 @@
-//SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
 
 import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract StunningPotato is ERC721 {
+contract StunningPotato is ERC721, ERC721Enumerable, Pausable, Ownable {
     // Enum representing resource types
     enum ResourceType {
         Frame,
@@ -23,6 +26,22 @@ contract StunningPotato is ERC721 {
     mapping(uint256 => Resource) private _resources;
 
     constructor() ERC721("EthGA", "EGA") {}
+
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721, ERC721Enumerable) whenNotPaused {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
 
     function createFrame(address author, bytes calldata data)
         public
@@ -51,5 +70,16 @@ contract StunningPotato is ERC721 {
         require(_exists(tokenId), "Data query for nonexistent token");
 
         return _resources[tokenId].data;
+    }
+
+    // The following functions are overrides required by Solidity.
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }
