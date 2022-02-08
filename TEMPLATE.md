@@ -33,18 +33,29 @@ npx solhint 'contracts/**/*.sol' --fix
 
 Example console session after deploying the contract:
 
-```
+```js
+// Setup
 const StunningPotato = await ethers.getContractFactory('StunningPotato');
-const stunningPotatoContractAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
+const stunningPotatoContractAddress = '0x5fbdb2315678afecb367f032d93f642f64180aa3';
 const stunningPotato = await StunningPotato.attach(stunningPotatoContractAddress);
-const authorAddress = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
-const frameData = '0xabcdef';
+const accounts = await ethers.getSigners();
+const authorAddress = accounts[0].address;
+// Create new frame
+const frameData = '0x' + '0'.repeat(280);
 const tx = await stunningPotato.createFrame(authorAddress, frameData);
 const rx = await tx.wait();
 const event = rx.events.find(e => e.event === 'Transfer');
-const tokenId = event.args['tokenId'].toString();
+const tokenId = event.args.tokenId.toString();
 await stunningPotato.tokenURI(tokenId);
 await stunningPotato.tokenData(tokenId);
+// Create new animation
+const animationData = '0xabcdef';
+const tx2 = await stunningPotato.createAnimation(authorAddress, animationData);
+const rx2 = await tx2.wait();
+const event2 = rx2.events.find(e => e.event === 'Transfer');
+const tokenId2 = event2.args.tokenId.toString();
+await stunningPotato.tokenURI(tokenId2);
+await stunningPotato.tokenData(tokenId2);
 ```
 
 # Etherscan verification
