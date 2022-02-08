@@ -130,13 +130,12 @@ contract StunningPotato is
         view
         virtual
         override
-        returns (address, uint256)
+        returns (address author, uint256 royaltyAmount)
     {
         require(_exists(tokenId), "Royalty info for nonexistent token");
 
-        uint256 royaltyAmount = (salePrice * DEFAULT_ROYALTY_PERCENTAGE) / 100;
-
-        return (_authors[tokenId], royaltyAmount);
+        author = _authors[tokenId];
+        royaltyAmount = (salePrice * DEFAULT_ROYALTY_PERCENTAGE) / 100;
     }
 
     // The following functions are overrides required by Solidity.
