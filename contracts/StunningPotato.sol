@@ -56,6 +56,9 @@ contract StunningPotato is
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
+    /**
+     * Store a frame resource and mint a new token.
+     */
     function createFrame(address author, bytes calldata data)
         public
         returns (uint256)
@@ -64,6 +67,22 @@ contract StunningPotato is
         _safeMint(author, tokenId);
 
         _resources[tokenId] = Resource(ResourceType.Frame, data);
+        _authors[tokenId] = author;
+
+        return tokenId;
+    }
+
+    /**
+     * Store a animation resource and mint a new token.
+     */
+    function createAnimation(address author, bytes calldata data)
+        public
+        returns (uint256)
+    {
+        uint256 tokenId = uint256(keccak256(data));
+        _safeMint(author, tokenId);
+
+        _resources[tokenId] = Resource(ResourceType.Animation, data);
         _authors[tokenId] = author;
 
         return tokenId;

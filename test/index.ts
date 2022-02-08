@@ -66,4 +66,45 @@ describe("StunningPotato", function () {
       stunningPotato.createFrame(addr1.address, frameData)
     ).to.be.revertedWith("ERC721: token already minted");
   });
+
+  it("Should create a new animation", async function () {
+    const animationData = "0xabcdef";
+    const createAnimationTx = await stunningPotato.createAnimation(
+      addr1.address,
+      animationData
+    );
+
+    // wait until the transaction is mined
+    const createAnimationRx = await createAnimationTx.wait();
+    const transfer = (createAnimationRx.events ?? []).find(
+      event => event.event === "Transfer"
+    );
+    const { tokenId } = transfer?.args ?? { tokenId: "" };
+
+    expect(
+      await stunningPotato.tokenURI(tokenId)
+    ).to.equal(`https://ethga.xyz/t/${tokenId}`);
+
+    expect(await stunningPotato.tokenData(tokenId)).to.equal(animationData);
+
+    const salePrice = 99;
+    const [receiver, amount] = await stunningPotato.royaltyInfo(tokenId, salePrice);
+    expect(receiver).to.equal(addr1.address);
+    expect(amount.toString()).to.equal('3');
+  });
+
+  it("Should reject duplicate animations", async function () {
+    const animationData = "0xabcdef";
+    const createAnimationTx = await stunningPotato.createAnimation(
+      addr1.address,
+      animationData
+    );
+
+    // wait until the transaction is mined
+    await createAnimationTx.wait();
+
+    await expect(
+      stunningPotato.createAnimation(addr1.address, animationData)
+    ).to.be.revertedWith("ERC721: token already minted");
+  });
 });
