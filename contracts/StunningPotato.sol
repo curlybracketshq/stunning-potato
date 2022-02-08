@@ -93,7 +93,7 @@ contract StunningPotato is
      * Store a animation resource and mint a new token.
      */
     function createAnimation(address author, bytes calldata data)
-        public
+        external
         returns (uint256)
     {
         uint256 tokenId = uint256(keccak256(data));
