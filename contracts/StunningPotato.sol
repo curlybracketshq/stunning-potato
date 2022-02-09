@@ -91,6 +91,21 @@ contract StunningPotato is
         returns (uint256)
     {
         _validateAnimationData(data);
+
+        // TODO: Compute frames count only once and re-use for validation
+        uint8 packedFields = uint8(data[0]);
+        uint8 framesCount = (packedFields >> 4) + 1;
+
+        for (uint8 i = 0; i < framesCount; i++) {
+            bytes calldata frameData = data[2 + i * 141:2 + (i + 1) * 141];
+            // TODO: Use this value to build a list of frame references
+            uint256 frameId = uint256(keccak256(frameData));
+            if (!_exists(frameId)) {
+                createFrame(author, frameData);
+            }
+        }
+
+        // TODO: Store a list of frame references instead of raw frame data
         return _createResource(author, data, ResourceType.Animation);
     }
 

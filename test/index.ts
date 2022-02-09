@@ -77,7 +77,8 @@ describe("StunningPotato", function () {
   });
 
   it("Should create a new animation", async function () {
-    const animationData = `0x0000${"0".repeat(282)}`;
+    const frameData = `0x${"0".repeat(282)}`;
+    const animationData = `0x0000${frameData.slice(2)}`;
     const createAnimationTx = await stunningPotato.createAnimation(
       addr1.address,
       animationData
@@ -85,21 +86,33 @@ describe("StunningPotato", function () {
 
     // wait until the transaction is mined
     const createAnimationRx = await createAnimationTx.wait();
-    expect(createAnimationRx.gasUsed.toString()).to.equal('227177');
+    expect(createAnimationRx.gasUsed.toString()).to.equal('404429');
 
-    const transfer = (createAnimationRx.events ?? []).find(
+    const [
+      frameTokenTransfer,
+      animationTokenTransfer
+    ] = (createAnimationRx.events ?? []).filter(
       event => event.event === "Transfer"
     );
-    const { tokenId } = transfer?.args ?? { tokenId: "" };
+    const { tokenId: frameId } = frameTokenTransfer.args ?? { tokenId: "" };
+    const { tokenId: animationId } = animationTokenTransfer.args ?? { tokenId: "" };
 
+    // animation token is present
     expect(
-      await stunningPotato.tokenURI(tokenId)
-    ).to.equal(`https://ethga.xyz/t/${tokenId}`);
+      await stunningPotato.tokenURI(animationId)
+    ).to.equal(`https://ethga.xyz/t/${animationId}`);
 
-    expect(await stunningPotato.tokenData(tokenId)).to.equal(animationData);
+    expect(await stunningPotato.tokenData(animationId)).to.equal(animationData);
+
+    // frame token is present
+    expect(
+      await stunningPotato.tokenURI(frameId)
+    ).to.equal(`https://ethga.xyz/t/${frameId}`);
+
+    expect(await stunningPotato.tokenData(frameId)).to.equal(frameData);
 
     const salePrice = 99;
-    const [receiver, amount] = await stunningPotato.royaltyInfo(tokenId, salePrice);
+    const [receiver, amount] = await stunningPotato.royaltyInfo(animationId, salePrice);
     expect(receiver).to.equal(addr1.address);
     expect(amount.toString()).to.equal('3');
   });
