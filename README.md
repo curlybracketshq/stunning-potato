@@ -289,6 +289,8 @@ Name candidates:
   - bitclip.xyz
 - EGA variations
   - ethga.xyz (Ethereum Graphics Adapter)
+- A ranch for bits, similar to "branch"
+  - bitranch.xyz
 
 ### 13.2. TODO
 
