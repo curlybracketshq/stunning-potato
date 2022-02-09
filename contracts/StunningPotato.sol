@@ -63,7 +63,7 @@ contract StunningPotato is
         public
         returns (uint256)
     {
-        require(_isFrameDataValid(data), "Data must be valid");
+        _validateFrameData(data);
 
         uint256 tokenId = uint256(keccak256(data));
         _safeMint(author, tokenId);
@@ -75,18 +75,13 @@ contract StunningPotato is
     }
 
     /**
-     * Returns whether the frame data in input is valid.
+     * Any 140 bytes array can be interpreted as valid frame data.
      *
      * See the "Frame format specification" section in the project README for
      * more information about the frame data spec.
      */
-    function _isFrameDataValid(bytes calldata data)
-        private
-        pure
-        returns (bool)
-    {
-        // Any 140 bytes array can be interpreted as a frame
-        return data.length == 140;
+    function _validateFrameData(bytes calldata data) internal pure {
+        require(data.length == 140, "Data must be valid");
     }
 
     /**
@@ -96,7 +91,7 @@ contract StunningPotato is
         external
         returns (uint256)
     {
-        require(_isAnimationDataValid(data), "Data must be valid");
+        _validateAnimationData(data);
 
         uint256 tokenId = uint256(keccak256(data));
         _safeMint(author, tokenId);
@@ -108,8 +103,6 @@ contract StunningPotato is
     }
 
     /**
-     * Returns whether the animation data in input is valid.
-     *
      * Animation data is valid if:
      *
      * - the animation has at least one frame
@@ -119,11 +112,7 @@ contract StunningPotato is
      * See the "Animation format specification" section in the project README
      * for more information about the animation data spec.
      */
-    function _isAnimationDataValid(bytes calldata data)
-        private
-        view
-        returns (bool)
-    {
+    function _validateAnimationData(bytes calldata data) private view {
         require(data.length >= 34, "Must have at least one frame");
 
         uint8 packedFields = uint8(data[0]);
@@ -139,8 +128,6 @@ contract StunningPotato is
             }
             require(_isFrame(frameId), "Invalid frame reference");
         }
-
-        return true;
     }
 
     /**
