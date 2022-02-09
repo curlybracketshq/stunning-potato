@@ -129,7 +129,7 @@ For more information about forks go to [Forks](#7-forks-aka-stems-derivatives).
 An animation is composed by:
 
 - metadata
-- list of frames references
+- list of frames data
 
 Animation metadata include:
 
@@ -229,10 +229,10 @@ TODO
   - 2 bits - Frame rate (0: 10 fps, 1: 25 fps, 2: 50 fps, 3: 100 fps)
   - 1 bit - Reserved
 - 0x0001 - Loop count (0 for infinite loops) (uint8)
-- 0x0002..0x0021 - 1st frame reference (uint256)
-- 0x0022..0x0041 - 2nd frame reference (uint256)
+- 0x0002..0x008E - 1st frame data (141 bytes)
+- 0x008F..0x011B - 2nd frame data (141 bytes)
 - ...
-- 0x01E2..0x0201 - 16th frame reference (uint256)
+- 0x0845..0x08D1 - 16th frame data (141 bytes)
 
 ## 9. Smart contract
 

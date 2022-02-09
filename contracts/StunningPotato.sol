@@ -68,13 +68,19 @@ contract StunningPotato is
     }
 
     /**
-     * Any 140 bytes array can be interpreted as valid frame data.
+     * Any 141 bytes array can be interpreted as valid frame data.
+     *
+     * Frame data:
+     *
+     * - 1 byte: packed fields
+     * - 12 bytes: color palette
+     * - 128 bytes: bitmap
      *
      * See the "Frame format specification" section in the project README for
      * more information about the frame data spec.
      */
     function _validateFrameData(bytes calldata data) internal pure {
-        require(data.length == 140, "Data must be valid");
+        require(data.length == 141, "Data must be valid");
     }
 
     /**
@@ -92,28 +98,28 @@ contract StunningPotato is
      * Animation data is valid if:
      *
      * - the animation has at least one frame
-     * - the number of frames corresponds with the number of references
-     * - each reference exists and is a frame resource
+     * - the number of frames corresponds with the data size
+     *
+     * Animation data:
+     *
+     * - 1 byte: packed fields
+     * - 1 byte: loop count
+     * - 141 bytes: 1st frame
+     * - 141 bytes: 2nd frame
+     * - ...
+     * - 141 bytes: 16th frame
      *
      * See the "Animation format specification" section in the project README
      * for more information about the animation data spec.
      */
-    function _validateAnimationData(bytes calldata data) private view {
-        require(data.length >= 34, "Must have at least one frame");
-
+    function _validateAnimationData(bytes calldata data) private pure {
         uint8 packedFields = uint8(data[0]);
         uint8 framesCount = (packedFields >> 4) + 1;
 
-        require(data.length == 2 + 32 * framesCount, "Frames count is invalid");
-
-        for (uint8 i = 0; i < framesCount; i++) {
-            uint256 frameId = 0;
-            for (uint8 j = 0; j < 32; j++) {
-                frameId <<= 8;
-                frameId |= uint8(data[2 + j + i * 32]);
-            }
-            require(_isFrame(frameId), "Invalid frame reference");
-        }
+        require(
+            data.length == 2 + 141 * uint16(framesCount),
+            "Frames count is invalid"
+        );
     }
 
     /**
