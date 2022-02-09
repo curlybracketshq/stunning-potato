@@ -35,7 +35,7 @@ describe("StunningPotato", function () {
 
     // wait until the transaction is mined
     const createFrameRx = await createFrameTx.wait();
-    expect(createFrameRx.gasUsed.toString()).to.equal('206575');
+    expect(createFrameRx.gasUsed.toString()).to.equal('206581');
 
     const transfer = (createFrameRx.events ?? []).find(
       event => event.event === "Transfer"
@@ -86,7 +86,48 @@ describe("StunningPotato", function () {
 
     // wait until the transaction is mined
     const createAnimationRx = await createAnimationTx.wait();
-    expect(createAnimationRx.gasUsed.toString()).to.equal('404429');
+    expect(createAnimationRx.gasUsed.toString()).to.equal('404052');
+
+    const [
+      frameTokenTransfer,
+      animationTokenTransfer
+    ] = (createAnimationRx.events ?? []).filter(
+      event => event.event === "Transfer"
+    );
+    const { tokenId: frameId } = frameTokenTransfer.args ?? { tokenId: "" };
+    const { tokenId: animationId } = animationTokenTransfer.args ?? { tokenId: "" };
+
+    // animation token is present
+    expect(
+      await stunningPotato.tokenURI(animationId)
+    ).to.equal(`https://ethga.xyz/t/${animationId}`);
+
+    expect(await stunningPotato.tokenData(animationId)).to.equal(animationData);
+
+    // frame token is present
+    expect(
+      await stunningPotato.tokenURI(frameId)
+    ).to.equal(`https://ethga.xyz/t/${frameId}`);
+
+    expect(await stunningPotato.tokenData(frameId)).to.equal(frameData);
+
+    const salePrice = 99;
+    const [receiver, amount] = await stunningPotato.royaltyInfo(animationId, salePrice);
+    expect(receiver).to.equal(addr1.address);
+    expect(amount.toString()).to.equal('3');
+  });
+
+  it("Should create a new animation (largest animation possible)", async function () {
+    const frameData = `0x${"0".repeat(282)}`;
+    const animationData = `0xf000${frameData.slice(2).repeat(16)}`;
+    const createAnimationTx = await stunningPotato.createAnimation(
+      addr1.address,
+      animationData
+    );
+
+    // wait until the transaction is mined
+    const createAnimationRx = await createAnimationTx.wait();
+    expect(createAnimationRx.gasUsed.toString()).to.equal('609123');
 
     const [
       frameTokenTransfer,

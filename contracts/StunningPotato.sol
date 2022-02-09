@@ -32,6 +32,29 @@ contract StunningPotato is
     // Default royalty percentage for authors
     uint8 private constant DEFAULT_ROYALTY_PERCENTAGE = 4;
 
+    /**
+     * Frame data size in bytes
+     *
+     * - 1 byte: packed fields
+     * - 12 bytes: color palette
+     * - 128 bytes: bitmap
+     *
+     * See the "Frame format specification" section in the project README for
+     * more information about the frame data spec.
+     */
+    uint8 private constant FRAME_DATA_SIZE = 141;
+
+    /**
+     * Animation data header size in bytes
+     *
+     * - 1 byte: packed fields
+     * - 1 byte: loop count
+     *
+     * See the "Animation format specification" section in the project README
+     * for more information about the animation data spec.
+     */
+    uint8 private constant APPLICATION_DATA_HEADER_SIZE = 2;
+
     // Mapping from token ID to resources
     mapping(uint256 => Resource) private _resources;
 
@@ -68,7 +91,7 @@ contract StunningPotato is
     }
 
     /**
-     * Any 141 bytes array can be interpreted as valid frame data.
+     * Any FRAME_DATA_SIZE bytes array can be interpreted as valid frame data.
      *
      * Frame data:
      *
@@ -80,7 +103,7 @@ contract StunningPotato is
      * more information about the frame data spec.
      */
     function _validateFrameData(bytes calldata data) internal pure {
-        require(data.length == 141, "Data must be valid");
+        require(data.length == FRAME_DATA_SIZE, "Data must be valid");
     }
 
     /**
@@ -97,7 +120,10 @@ contract StunningPotato is
         uint8 framesCount = (packedFields >> 4) + 1;
 
         for (uint8 i = 0; i < framesCount; i++) {
-            bytes calldata frameData = data[2 + i * 141:2 + (i + 1) * 141];
+            uint16 offset = APPLICATION_DATA_HEADER_SIZE +
+                i *
+                uint16(FRAME_DATA_SIZE);
+            bytes calldata frameData = data[offset:offset + FRAME_DATA_SIZE];
             // TODO: Use this value to build a list of frame references
             uint256 frameId = uint256(keccak256(frameData));
             if (!_exists(frameId)) {
@@ -119,10 +145,10 @@ contract StunningPotato is
      *
      * - 1 byte: packed fields
      * - 1 byte: loop count
-     * - 141 bytes: 1st frame
-     * - 141 bytes: 2nd frame
+     * - FRAME_DATA_SIZE bytes: 1st frame
+     * - FRAME_DATA_SIZE bytes: 2nd frame
      * - ...
-     * - 141 bytes: 16th frame
+     * - FRAME_DATA_SIZE bytes: 16th frame
      *
      * See the "Animation format specification" section in the project README
      * for more information about the animation data spec.
@@ -132,7 +158,10 @@ contract StunningPotato is
         uint8 framesCount = (packedFields >> 4) + 1;
 
         require(
-            data.length == 2 + 141 * uint16(framesCount),
+            data.length ==
+                APPLICATION_DATA_HEADER_SIZE +
+                    FRAME_DATA_SIZE *
+                    uint16(framesCount),
             "Frames count is invalid"
         );
     }
