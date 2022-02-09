@@ -77,7 +77,17 @@ describe("StunningPotato", function () {
   });
 
   it("Should create a new animation", async function () {
-    const animationData = "0xabcdef";
+    const frameData = `0x${"0".repeat(280)}`;
+    const createFrameTx = await stunningPotato.createFrame(
+      addr1.address,
+      frameData
+    );
+
+    // wait until the transaction is mined
+    await createFrameTx.wait();
+    const frameId = ethers.utils.keccak256(frameData);
+
+    const animationData = `0x0000${frameId.slice(2)}`;
     const createAnimationTx = await stunningPotato.createAnimation(
       addr1.address,
       animationData
@@ -85,7 +95,7 @@ describe("StunningPotato", function () {
 
     // wait until the transaction is mined
     const createAnimationRx = await createAnimationTx.wait();
-    expect(createAnimationRx.gasUsed.toString()).to.equal('214403');
+    expect(createAnimationRx.gasUsed.toString()).to.equal('300293');
 
     const transfer = (createAnimationRx.events ?? []).find(
       event => event.event === "Transfer"
@@ -105,7 +115,17 @@ describe("StunningPotato", function () {
   });
 
   it("Should reject duplicate animations", async function () {
-    const animationData = "0xabcdef";
+    const frameData = `0x${"0".repeat(280)}`;
+    const createFrameTx = await stunningPotato.createFrame(
+      addr1.address,
+      frameData
+    );
+
+    // wait until the transaction is mined
+    await createFrameTx.wait();
+    const frameId = ethers.utils.keccak256(frameData);
+
+    const animationData = `0x0000${frameId.slice(2)}`;
     const createAnimationTx = await stunningPotato.createAnimation(
       addr1.address,
       animationData
@@ -117,5 +137,53 @@ describe("StunningPotato", function () {
     await expect(
       stunningPotato.createAnimation(addr1.address, animationData)
     ).to.be.revertedWith("ERC721: token already minted");
+  });
+
+  it("Should reject invalid animation data (too short)", async function () {
+    const animationData = "0xabcdef";
+    await expect(
+      stunningPotato.createAnimation(addr1.address, animationData)
+    ).to.be.revertedWith("Must have at least one frame");
+  });
+
+  it("Should reject invalid animation data (frames count doesn't match)", async function () {
+    const animationData = `0x1000${"0".repeat(64)}`;
+    await expect(
+      stunningPotato.createAnimation(addr1.address, animationData)
+    ).to.be.revertedWith("Frames count is invalid");
+  });
+
+  it("Should reject invalid animation data (frame doesn't exist)", async function () {
+    const animationData = `0x0000${"0".repeat(64)}`;
+    await expect(
+      stunningPotato.createAnimation(addr1.address, animationData)
+    ).to.be.revertedWith("Invalid frame reference");
+  });
+
+  it("Should reject invalid animation data (referenced resource is not a frame)", async function () {
+    const frameData = `0x${"0".repeat(280)}`;
+    const createFrameTx = await stunningPotato.createFrame(
+      addr1.address,
+      frameData
+    );
+
+    // wait until the transaction is mined
+    await createFrameTx.wait();
+    const frameId = ethers.utils.keccak256(frameData);
+
+    const animationData = `0x0000${frameId.slice(2)}`;
+    const createAnimationTx = await stunningPotato.createAnimation(
+      addr1.address,
+      animationData
+    );
+
+    // wait until the transaction is mined
+    await createAnimationTx.wait();
+    const animationId = ethers.utils.keccak256(animationData);
+
+    const invalidAnimationData = `0x0000${animationId.slice(2)}`;
+    await expect(
+      stunningPotato.createAnimation(addr1.address, invalidAnimationData)
+    ).to.be.revertedWith("Invalid frame reference");
   });
 });

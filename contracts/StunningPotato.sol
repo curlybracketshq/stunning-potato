@@ -96,6 +96,8 @@ contract StunningPotato is
         external
         returns (uint256)
     {
+        require(_isAnimationDataValid(data), "Data must be valid");
+
         uint256 tokenId = uint256(keccak256(data));
         _safeMint(author, tokenId);
 
@@ -103,6 +105,51 @@ contract StunningPotato is
         _authors[tokenId] = author;
 
         return tokenId;
+    }
+
+    /**
+     * Returns whether the animation data in input is valid.
+     *
+     * Animation data is valid if:
+     *
+     * - the animation has at least one frame
+     * - the number of frames corresponds with the number of references
+     * - each reference exists and is a frame resource
+     *
+     * See the "Animation format specification" section in the project README
+     * for more information about the animation data spec.
+     */
+    function _isAnimationDataValid(bytes calldata data)
+        private
+        view
+        returns (bool)
+    {
+        require(data.length >= 34, "Must have at least one frame");
+
+        uint8 packedFields = uint8(data[0]);
+        uint8 framesCount = (packedFields >> 4) + 1;
+
+        require(data.length == 2 + 32 * framesCount, "Frames count is invalid");
+
+        for (uint8 i = 0; i < framesCount; i++) {
+            uint256 frameId = 0;
+            for (uint8 j = 0; j < 32; j++) {
+                frameId <<= 8;
+                frameId |= uint8(data[2 + j + i * 32]);
+            }
+            require(_isFrame(frameId), "Invalid frame reference");
+        }
+
+        return true;
+    }
+
+    /**
+     * @dev Returns whether `tokenId` exists and is a frame resource.
+     */
+    function _isFrame(uint256 tokenId) internal view virtual returns (bool) {
+        return
+            _exists(tokenId) &&
+            _resources[tokenId].resourceType == ResourceType.Frame;
     }
 
     /**
