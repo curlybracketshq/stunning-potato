@@ -64,14 +64,7 @@ contract StunningPotato is
         returns (uint256)
     {
         _validateFrameData(data);
-
-        uint256 tokenId = uint256(keccak256(data));
-        _safeMint(author, tokenId);
-
-        _resources[tokenId] = Resource(ResourceType.Frame, data);
-        _authors[tokenId] = author;
-
-        return tokenId;
+        return _createResource(author, data, ResourceType.Frame);
     }
 
     /**
@@ -92,14 +85,7 @@ contract StunningPotato is
         returns (uint256)
     {
         _validateAnimationData(data);
-
-        uint256 tokenId = uint256(keccak256(data));
-        _safeMint(author, tokenId);
-
-        _resources[tokenId] = Resource(ResourceType.Animation, data);
-        _authors[tokenId] = author;
-
-        return tokenId;
+        return _createResource(author, data, ResourceType.Animation);
     }
 
     /**
@@ -137,6 +123,23 @@ contract StunningPotato is
         return
             _exists(tokenId) &&
             _resources[tokenId].resourceType == ResourceType.Frame;
+    }
+
+    /**
+     * Creates a new resource of the specified type.
+     *
+     * Data must be validated by the caller.
+     */
+    function _createResource(
+        address author,
+        bytes calldata data,
+        ResourceType resourceType
+    ) private returns (uint256 tokenId) {
+        tokenId = uint256(keccak256(data));
+        _safeMint(author, tokenId);
+
+        _resources[tokenId] = Resource(resourceType, data);
+        _authors[tokenId] = author;
     }
 
     /**

@@ -35,7 +35,7 @@ describe("StunningPotato", function () {
 
     // wait until the transaction is mined
     const createFrameRx = await createFrameTx.wait();
-    expect(createFrameRx.gasUsed.toString()).to.equal('206530');
+    expect(createFrameRx.gasUsed.toString()).to.equal('206575');
 
     const transfer = (createFrameRx.events ?? []).find(
       event => event.event === "Transfer"
@@ -95,7 +95,7 @@ describe("StunningPotato", function () {
 
     // wait until the transaction is mined
     const createAnimationRx = await createAnimationTx.wait();
-    expect(createAnimationRx.gasUsed.toString()).to.equal('300262');
+    expect(createAnimationRx.gasUsed.toString()).to.equal('300307');
 
     const transfer = (createAnimationRx.events ?? []).find(
       event => event.event === "Transfer"
