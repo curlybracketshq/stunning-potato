@@ -10,7 +10,11 @@ describe("StunningPotato", function () {
   let stunningPotato: StunningPotato;
   let owner;
   let addr1: SignerWithAddress;
-  let addrs
+  let addrs;
+
+  const GAS_COST_CREATE_FRAME = '206575';
+  const GAS_COST_CREATE_ANIMATION = '403872';
+  const GAS_COST_CREATE_ANIMATION_LARGE = '607593';
 
   // `beforeEach` will run before each test, re-deploying the contract every
   // time. It receives a callback, which can be async.
@@ -35,7 +39,7 @@ describe("StunningPotato", function () {
 
     // wait until the transaction is mined
     const createFrameRx = await createFrameTx.wait();
-    expect(createFrameRx.gasUsed.toString()).to.equal('206581');
+    expect(createFrameRx.gasUsed.toString()).to.equal(GAS_COST_CREATE_FRAME);
 
     const transfer = (createFrameRx.events ?? []).find(
       event => event.event === "Transfer"
@@ -86,7 +90,7 @@ describe("StunningPotato", function () {
 
     // wait until the transaction is mined
     const createAnimationRx = await createAnimationTx.wait();
-    expect(createAnimationRx.gasUsed.toString()).to.equal('404052');
+    expect(createAnimationRx.gasUsed.toString()).to.equal(GAS_COST_CREATE_ANIMATION);
 
     const [
       frameTokenTransfer,
@@ -127,7 +131,7 @@ describe("StunningPotato", function () {
 
     // wait until the transaction is mined
     const createAnimationRx = await createAnimationTx.wait();
-    expect(createAnimationRx.gasUsed.toString()).to.equal('609123');
+    expect(createAnimationRx.gasUsed.toString()).to.equal(GAS_COST_CREATE_ANIMATION_LARGE);
 
     const [
       frameTokenTransfer,

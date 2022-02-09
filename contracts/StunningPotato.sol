@@ -30,7 +30,7 @@ contract StunningPotato is
     }
 
     // Default royalty percentage for authors
-    uint8 private constant DEFAULT_ROYALTY_PERCENTAGE = 4;
+    uint256 private constant DEFAULT_ROYALTY_PERCENTAGE = 4;
 
     /**
      * Frame data size in bytes
@@ -42,7 +42,7 @@ contract StunningPotato is
      * See the "Frame format specification" section in the project README for
      * more information about the frame data spec.
      */
-    uint8 private constant FRAME_DATA_SIZE = 141;
+    uint256 private constant FRAME_DATA_SIZE = 141;
 
     /**
      * Animation data header size in bytes
@@ -53,7 +53,7 @@ contract StunningPotato is
      * See the "Animation format specification" section in the project README
      * for more information about the animation data spec.
      */
-    uint8 private constant APPLICATION_DATA_HEADER_SIZE = 2;
+    uint256 private constant APPLICATION_DATA_HEADER_SIZE = 2;
 
     // Mapping from token ID to resources
     mapping(uint256 => Resource) private _resources;
@@ -116,13 +116,11 @@ contract StunningPotato is
         _validateAnimationData(data);
 
         // TODO: Compute frames count only once and re-use for validation
-        uint8 packedFields = uint8(data[0]);
-        uint8 framesCount = (packedFields >> 4) + 1;
+        uint256 packedFields = uint8(data[0]);
+        uint256 framesCount = (packedFields >> 4) + 1;
 
-        for (uint8 i = 0; i < framesCount; i++) {
-            uint16 offset = APPLICATION_DATA_HEADER_SIZE +
-                i *
-                uint16(FRAME_DATA_SIZE);
+        for (uint256 i = 0; i < framesCount; i++) {
+            uint256 offset = APPLICATION_DATA_HEADER_SIZE + i * FRAME_DATA_SIZE;
             bytes calldata frameData = data[offset:offset + FRAME_DATA_SIZE];
             // TODO: Use this value to build a list of frame references
             uint256 frameId = uint256(keccak256(frameData));
@@ -154,14 +152,12 @@ contract StunningPotato is
      * for more information about the animation data spec.
      */
     function _validateAnimationData(bytes calldata data) private pure {
-        uint8 packedFields = uint8(data[0]);
-        uint8 framesCount = (packedFields >> 4) + 1;
+        uint256 packedFields = uint8(data[0]);
+        uint256 framesCount = (packedFields >> 4) + 1;
 
         require(
             data.length ==
-                APPLICATION_DATA_HEADER_SIZE +
-                    FRAME_DATA_SIZE *
-                    uint16(framesCount),
+                APPLICATION_DATA_HEADER_SIZE + FRAME_DATA_SIZE * framesCount,
             "Frames count is invalid"
         );
     }
