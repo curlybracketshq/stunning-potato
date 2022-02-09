@@ -113,11 +113,9 @@ contract StunningPotato is
         external
         returns (uint256)
     {
-        _validateAnimationData(data);
-
-        // TODO: Compute frames count only once and re-use for validation
         uint256 packedFields = uint8(data[0]);
         uint256 framesCount = (packedFields >> 4) + 1;
+        _validateAnimationData(data, framesCount);
 
         for (uint256 i = 0; i < framesCount; i++) {
             uint256 offset = APPLICATION_DATA_HEADER_SIZE + i * FRAME_DATA_SIZE;
@@ -150,11 +148,15 @@ contract StunningPotato is
      *
      * See the "Animation format specification" section in the project README
      * for more information about the animation data spec.
+     *
+     * Requirements:
+     *
+     * - `framesCount` must be greater than 0 and less than or equal to 16.
      */
-    function _validateAnimationData(bytes calldata data) private pure {
-        uint256 packedFields = uint8(data[0]);
-        uint256 framesCount = (packedFields >> 4) + 1;
-
+    function _validateAnimationData(bytes calldata data, uint256 framesCount)
+        private
+        pure
+    {
         require(
             data.length ==
                 APPLICATION_DATA_HEADER_SIZE + FRAME_DATA_SIZE * framesCount,

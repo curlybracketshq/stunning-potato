@@ -13,8 +13,8 @@ describe("StunningPotato", function () {
   let addrs;
 
   const GAS_COST_CREATE_FRAME = '206575';
-  const GAS_COST_CREATE_ANIMATION = '403872';
-  const GAS_COST_CREATE_ANIMATION_LARGE = '607593';
+  const GAS_COST_CREATE_ANIMATION = '403584';
+  const GAS_COST_CREATE_ANIMATION_LARGE = '607305';
 
   // `beforeEach` will run before each test, re-deploying the contract every
   // time. It receives a callback, which can be async.
