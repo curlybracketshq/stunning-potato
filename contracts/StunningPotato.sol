@@ -262,6 +262,17 @@ contract StunningPotato is
         royaltyAmount = (salePrice * DEFAULT_ROYALTY_PERCENTAGE) / 100;
     }
 
+    /**
+     * Withdraw sale proceeds
+     */
+    function withdraw() external onlyOwner {
+        uint256 balance = address(this).balance;
+        if (balance > 0) {
+            (bool success, ) = owner().call{value: address(this).balance}("");
+            require(success, "Transaction failure");
+        }
+    }
+
     // The following functions are overrides required by Solidity.
 
     function supportsInterface(bytes4 interfaceId)

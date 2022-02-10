@@ -16,8 +16,8 @@ describe("StunningPotato", function () {
   const PRICE_ANIMATION = ethers.utils.parseEther("0.01");
 
   const GAS_COST_CREATE_FRAME = '213966';
-  const GAS_COST_CREATE_ANIMATION = '411279';
-  const GAS_COST_CREATE_ANIMATION_LARGE = '615000';
+  const GAS_COST_CREATE_ANIMATION = '411301';
+  const GAS_COST_CREATE_ANIMATION_LARGE = '615022';
 
   // `beforeEach` will run before each test, re-deploying the contract every
   // time. It receives a callback, which can be async.
@@ -226,5 +226,46 @@ describe("StunningPotato", function () {
         { value: ethers.utils.parseEther("0.1") }
       )
     ).to.be.revertedWith("Frames count is invalid");
+  });
+
+  it("Should allow the owner to withdraw funds", async function () {
+    const frameData = `0x${"0".repeat(282)}`;
+    const createFrameTx = await stunningPotato.createFrame(
+      addr1.address,
+      frameData,
+      { value: ethers.utils.parseEther("0.1") }
+    );
+
+    // wait until the transaction is mined
+    await createFrameTx.wait();
+
+    const contractBalance = await ethers.provider.getBalance(stunningPotato.address);
+    expect(contractBalance.toString()).to.equal(PRICE_FRAME);
+
+    const withdrawTx = await stunningPotato.withdraw();
+    // wait until the transaction is mined
+    await createFrameTx.wait();
+
+    const newContractBalance = await ethers.provider.getBalance(stunningPotato.address);
+    expect(newContractBalance.toString()).to.equal(ethers.utils.parseEther("0"));
+  });
+
+  it("Should not allow non-owners to withdraw funds", async function () {
+    const frameData = `0x${"0".repeat(282)}`;
+    const createFrameTx = await stunningPotato.createFrame(
+      addr1.address,
+      frameData,
+      { value: ethers.utils.parseEther("0.1") }
+    );
+
+    // wait until the transaction is mined
+    await createFrameTx.wait();
+
+    const contractBalance = await ethers.provider.getBalance(stunningPotato.address);
+    expect(contractBalance.toString()).to.equal(PRICE_FRAME);
+
+    await expect(
+      stunningPotato.connect(addr1).withdraw()
+    ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 });
