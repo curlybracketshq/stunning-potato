@@ -55,6 +55,16 @@ contract StunningPotato is
      */
     uint256 private constant APPLICATION_DATA_HEADER_SIZE = 2;
 
+    /**
+     * Price for creating a new frame
+     */
+    uint256 public constant PRICE_FRAME = 0.01 ether;
+
+    /**
+     * Price for creating a new animation
+     */
+    uint256 public constant PRICE_ANIMATION = 0.01 ether;
+
     // Mapping from token ID to resources
     mapping(uint256 => Resource) private _resources;
 
@@ -84,10 +94,27 @@ contract StunningPotato is
      */
     function createFrame(address author, bytes calldata data)
         public
-        returns (uint256)
+        payable
+        returns (uint256 tokenId)
+    {
+        require(msg.value >= PRICE_FRAME, "Invalid amount");
+
+        tokenId = _createFrame(author, data);
+
+        // Send any excess ETH back to the caller
+        uint256 excess = msg.value - PRICE_ANIMATION;
+        if (excess > 0) {
+            (bool success, ) = msg.sender.call{value: excess}("");
+            require(success, "Return transaction failure");
+        }
+    }
+
+    function _createFrame(address author, bytes calldata data)
+        private
+        returns (uint256 tokenId)
     {
         _validateFrameData(data);
-        return _createResource(author, data, ResourceType.Frame);
+        tokenId = _createResource(author, data, ResourceType.Frame);
     }
 
     /**
@@ -111,10 +138,11 @@ contract StunningPotato is
      */
     function createAnimation(address author, bytes calldata data)
         external
-        returns (uint256)
+        payable
     {
         uint256 packedFields = uint8(data[0]);
         uint256 framesCount = (packedFields >> 4) + 1;
+        uint256 newFramesCount = 0;
         _validateAnimationData(data, framesCount);
 
         for (uint256 i = 0; i < framesCount; i++) {
@@ -123,12 +151,23 @@ contract StunningPotato is
             // TODO: Use this value to build a list of frame references
             uint256 frameId = uint256(keccak256(frameData));
             if (!_exists(frameId)) {
-                createFrame(author, frameData);
+                newFramesCount++;
+                _createFrame(author, frameData);
             }
         }
 
+        uint256 totalPrice = PRICE_ANIMATION + newFramesCount * PRICE_FRAME;
+        require(msg.value >= totalPrice, "Invalid amount");
+
         // TODO: Store a list of frame references instead of raw frame data
-        return _createResource(author, data, ResourceType.Animation);
+        _createResource(author, data, ResourceType.Animation);
+
+        // Send any excess ETH back to the caller
+        uint256 excess = msg.value - totalPrice;
+        if (excess > 0) {
+            (bool success, ) = msg.sender.call{value: excess}("");
+            require(success, "Return transaction failure");
+        }
     }
 
     /**

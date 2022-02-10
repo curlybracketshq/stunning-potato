@@ -12,9 +12,12 @@ describe("StunningPotato", function () {
   let addr1: SignerWithAddress;
   let addrs;
 
-  const GAS_COST_CREATE_FRAME = '206575';
-  const GAS_COST_CREATE_ANIMATION = '403584';
-  const GAS_COST_CREATE_ANIMATION_LARGE = '607305';
+  const PRICE_FRAME = ethers.utils.parseEther("0.01");
+  const PRICE_ANIMATION = ethers.utils.parseEther("0.01");
+
+  const GAS_COST_CREATE_FRAME = '213966';
+  const GAS_COST_CREATE_ANIMATION = '411279';
+  const GAS_COST_CREATE_ANIMATION_LARGE = '615000';
 
   // `beforeEach` will run before each test, re-deploying the contract every
   // time. It receives a callback, which can be async.
@@ -34,7 +37,8 @@ describe("StunningPotato", function () {
     const frameData = `0x${"0".repeat(282)}`;
     const createFrameTx = await stunningPotato.createFrame(
       addr1.address,
-      frameData
+      frameData,
+      { value: ethers.utils.parseEther("0.1") }
     );
 
     // wait until the transaction is mined
@@ -56,12 +60,19 @@ describe("StunningPotato", function () {
     const [receiver, amount] = await stunningPotato.royaltyInfo(tokenId, salePrice);
     expect(receiver).to.equal(addr1.address);
     expect(amount.toString()).to.equal('3');
+
+    const contractBalance = await ethers.provider.getBalance(stunningPotato.address);
+    expect(contractBalance.toString()).to.equal(PRICE_FRAME);
   });
 
   it("Should reject invalid frame data", async function () {
     const frameData = "0xabcdef";
     await expect(
-      stunningPotato.createFrame(addr1.address, frameData)
+      stunningPotato.createFrame(
+        addr1.address,
+        frameData,
+        { value: ethers.utils.parseEther("0.1") }
+      )
     ).to.be.revertedWith("Data must be valid");
   });
 
@@ -69,14 +80,19 @@ describe("StunningPotato", function () {
     const frameData = `0x${"0".repeat(282)}`;
     const createFrameTx = await stunningPotato.createFrame(
       addr1.address,
-      frameData
+      frameData,
+      { value: ethers.utils.parseEther("0.1") }
     );
 
     // wait until the transaction is mined
     await createFrameTx.wait();
 
     await expect(
-      stunningPotato.createFrame(addr1.address, frameData)
+      stunningPotato.createFrame(
+        addr1.address,
+        frameData,
+        { value: ethers.utils.parseEther("0.1") }
+      )
     ).to.be.revertedWith("ERC721: token already minted");
   });
 
@@ -85,7 +101,8 @@ describe("StunningPotato", function () {
     const animationData = `0x0000${frameData.slice(2)}`;
     const createAnimationTx = await stunningPotato.createAnimation(
       addr1.address,
-      animationData
+      animationData,
+      { value: ethers.utils.parseEther("0.1") }
     );
 
     // wait until the transaction is mined
@@ -119,6 +136,9 @@ describe("StunningPotato", function () {
     const [receiver, amount] = await stunningPotato.royaltyInfo(animationId, salePrice);
     expect(receiver).to.equal(addr1.address);
     expect(amount.toString()).to.equal('3');
+
+    const contractBalance = await ethers.provider.getBalance(stunningPotato.address);
+    expect(contractBalance.toString()).to.equal(PRICE_ANIMATION.add(PRICE_FRAME));
   });
 
   it("Should create a new animation (largest animation possible)", async function () {
@@ -126,7 +146,8 @@ describe("StunningPotato", function () {
     const animationData = `0xf000${frameData.slice(2).repeat(16)}`;
     const createAnimationTx = await stunningPotato.createAnimation(
       addr1.address,
-      animationData
+      animationData,
+      { value: ethers.utils.parseEther("0.1") }
     );
 
     // wait until the transaction is mined
@@ -160,34 +181,50 @@ describe("StunningPotato", function () {
     const [receiver, amount] = await stunningPotato.royaltyInfo(animationId, salePrice);
     expect(receiver).to.equal(addr1.address);
     expect(amount.toString()).to.equal('3');
+
+    const contractBalance = await ethers.provider.getBalance(stunningPotato.address);
+    expect(contractBalance.toString()).to.equal(PRICE_ANIMATION.add(PRICE_FRAME));
   });
 
   it("Should reject duplicate animations", async function () {
     const animationData = `0x0000${"0".repeat(282)}`;
     const createAnimationTx = await stunningPotato.createAnimation(
       addr1.address,
-      animationData
+      animationData,
+      { value: ethers.utils.parseEther("0.1") }
     );
 
     // wait until the transaction is mined
     await createAnimationTx.wait();
 
     await expect(
-      stunningPotato.createAnimation(addr1.address, animationData)
+      stunningPotato.createAnimation(
+        addr1.address,
+        animationData,
+        { value: ethers.utils.parseEther("0.1") }
+      )
     ).to.be.revertedWith("ERC721: token already minted");
   });
 
   it("Should reject invalid animation data (too short)", async function () {
     const animationData = "0xabcdef";
     await expect(
-      stunningPotato.createAnimation(addr1.address, animationData)
+      stunningPotato.createAnimation(
+        addr1.address,
+        animationData,
+        { value: ethers.utils.parseEther("0.1") }
+      )
     ).to.be.revertedWith("Frames count is invalid");
   });
 
   it("Should reject invalid animation data (frames count doesn't match)", async function () {
     const animationData = `0x1000${"0".repeat(282)}`;
     await expect(
-      stunningPotato.createAnimation(addr1.address, animationData)
+      stunningPotato.createAnimation(
+        addr1.address,
+        animationData,
+        { value: ethers.utils.parseEther("0.1") }
+      )
     ).to.be.revertedWith("Frames count is invalid");
   });
 });
