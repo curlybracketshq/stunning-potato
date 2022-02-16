@@ -26,25 +26,12 @@ library SVG {
     {
         Color[] memory colorTable = _encodeColorTable(data);
         for (uint256 y = 0; y < 16; y++) {
-            encoded = abi.encodePacked(
-                encoded,
-                _encodeRect(colorTable[0], 1, 0, y),
-                _encodeRect(colorTable[0], 1, 1, y),
-                _encodeRect(colorTable[0], 1, 2, y),
-                _encodeRect(colorTable[0], 1, 3, y),
-                _encodeRect(colorTable[0], 1, 4, y),
-                _encodeRect(colorTable[0], 1, 5, y),
-                _encodeRect(colorTable[0], 1, 6, y),
-                _encodeRect(colorTable[0], 1, 7, y),
-                _encodeRect(colorTable[0], 1, 8, y),
-                _encodeRect(colorTable[0], 1, 9, y),
-                _encodeRect(colorTable[0], 1, 10, y),
-                _encodeRect(colorTable[0], 1, 11, y),
-                _encodeRect(colorTable[0], 1, 12, y),
-                _encodeRect(colorTable[0], 1, 13, y),
-                _encodeRect(colorTable[0], 1, 14, y),
-                _encodeRect(colorTable[0], 1, 15, y)
-            );
+            for (uint256 x = 0; x < 16; x++) {
+                encoded = abi.encodePacked(
+                    encoded,
+                    _encodeRect(colorTable[0], 1, x, y)
+                );
+            }
         }
     }
 
