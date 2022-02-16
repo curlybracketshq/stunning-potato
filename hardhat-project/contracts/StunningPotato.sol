@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Base64.sol";
+import "./SVG.sol";
 
 contract StunningPotato is
     ERC721,
@@ -64,6 +66,17 @@ contract StunningPotato is
      * Price for creating a new animation
      */
     uint256 public constant PRICE_ANIMATION = 0.01 ether;
+
+    /**
+     * Token metadata header
+     *
+     * Token metadata is a data URL that contains a JSON that conforms to the
+     * ERC721 Metadata JSON Schema.
+     *
+     * See https://eips.ethereum.org/EIPS/eip-721
+     */
+    string private constant METADATA_HEADER =
+        'data:application/json;ascii,{"description":"Very expensive pixel art animations.","image":"data:image/gif;base64,';
 
     // Mapping from token ID to resources
     mapping(uint256 => Resource) private _resources;
@@ -230,14 +243,6 @@ contract StunningPotato is
     }
 
     /**
-     * @dev Base URI for computing {tokenURI}. The resulting URI for each token
-     * will be the concatenation of the `baseURI` and the `tokenId`.
-     */
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://ethga.xyz/t/";
-    }
-
-    /**
      * @dev Returns data associated to a token.
      */
     function tokenData(uint256 tokenId) public view returns (bytes memory) {
@@ -271,6 +276,34 @@ contract StunningPotato is
             (bool success, ) = owner().call{value: address(this).balance}("");
             require(success, "Transaction failure");
         }
+    }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+
+        return _metadata(tokenId);
+    }
+
+    function _metadata(uint256 tokenId)
+        private
+        view
+        returns (string memory metadata)
+    {
+        require(_exists(tokenId), "Token doesn't exists");
+
+        bytes memory gifData;
+        if (_resources[tokenId].resourceType == ResourceType.Frame) {
+            gifData = SVG.encodeFrame(_resources[tokenId].data);
+        } else {
+            gifData = SVG.encodeAnimation(_resources[tokenId].data);
+        }
+
+        metadata = string(
+            abi.encodePacked(METADATA_HEADER, Base64.encode(gifData), '"}')
+        );
     }
 
     // The following functions are overrides required by Solidity.
