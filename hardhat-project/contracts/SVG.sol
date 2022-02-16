@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
+import "@openzeppelin/contracts/utils/Strings.sol";
+
 import "hardhat/console.sol";
 
 /**
@@ -25,8 +27,8 @@ library SVG {
         returns (bytes memory encoded)
     {
         Color[] memory colorTable = _encodeColorTable(data);
-        for (uint256 y = 0; y < 16; y++) {
-            for (uint256 x = 0; x < 16; x++) {
+        for (uint8 y = 0; y < IMAGE_HEIGHT; y++) {
+            for (uint8 x = 0; x < IMAGE_WIDTH; x++) {
                 encoded = abi.encodePacked(
                     encoded,
                     _encodeRect(colorTable[0], 1, x, y)
@@ -51,12 +53,12 @@ library SVG {
         uint256 y
     ) internal pure returns (bytes memory rect) {
         rect = abi.encodePacked(
-            "<rect fill=",
+            '<rect fill="',
             _encodeCSSColor(color, alpha),
-            ' x="',
-            x,
+            '" x="',
+            Strings.toString(x),
             '" y="',
-            y,
+            Strings.toString(y),
             '"/>'
         );
     }
@@ -117,13 +119,13 @@ library SVG {
     {
         cssColor = abi.encodePacked(
             "rgba(",
-            color.r,
+            Strings.toString(color.r),
             ",",
-            color.g,
+            Strings.toString(color.g),
             ",",
-            color.b,
+            Strings.toString(color.b),
             ",",
-            alpha,
+            Strings.toString(alpha),
             ")"
         );
     }
