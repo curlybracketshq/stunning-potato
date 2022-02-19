@@ -14,8 +14,9 @@ library SVG {
     uint8 private constant COLORS_NUMBER = 16;
 
     bytes private constant HEX_CHARS = "0123456789ABCDEF";
-    bytes private constant RECTS =
-        '<rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 0"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 1"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 2"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 3"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 4"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 5"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 6"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 7"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 8"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x="10" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x="11" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x="12" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x="13" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x="14" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x="15" y=" 9"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y="10"/><rect fill="rgba(   ,   ,   ,1)" x="10" y="10"/><rect fill="rgba(   ,   ,   ,1)" x="11" y="10"/><rect fill="rgba(   ,   ,   ,1)" x="12" y="10"/><rect fill="rgba(   ,   ,   ,1)" x="13" y="10"/><rect fill="rgba(   ,   ,   ,1)" x="14" y="10"/><rect fill="rgba(   ,   ,   ,1)" x="15" y="10"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y="11"/><rect fill="rgba(   ,   ,   ,1)" x="10" y="11"/><rect fill="rgba(   ,   ,   ,1)" x="11" y="11"/><rect fill="rgba(   ,   ,   ,1)" x="12" y="11"/><rect fill="rgba(   ,   ,   ,1)" x="13" y="11"/><rect fill="rgba(   ,   ,   ,1)" x="14" y="11"/><rect fill="rgba(   ,   ,   ,1)" x="15" y="11"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y="12"/><rect fill="rgba(   ,   ,   ,1)" x="10" y="12"/><rect fill="rgba(   ,   ,   ,1)" x="11" y="12"/><rect fill="rgba(   ,   ,   ,1)" x="12" y="12"/><rect fill="rgba(   ,   ,   ,1)" x="13" y="12"/><rect fill="rgba(   ,   ,   ,1)" x="14" y="12"/><rect fill="rgba(   ,   ,   ,1)" x="15" y="12"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y="13"/><rect fill="rgba(   ,   ,   ,1)" x="10" y="13"/><rect fill="rgba(   ,   ,   ,1)" x="11" y="13"/><rect fill="rgba(   ,   ,   ,1)" x="12" y="13"/><rect fill="rgba(   ,   ,   ,1)" x="13" y="13"/><rect fill="rgba(   ,   ,   ,1)" x="14" y="13"/><rect fill="rgba(   ,   ,   ,1)" x="15" y="13"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y="14"/><rect fill="rgba(   ,   ,   ,1)" x="10" y="14"/><rect fill="rgba(   ,   ,   ,1)" x="11" y="14"/><rect fill="rgba(   ,   ,   ,1)" x="12" y="14"/><rect fill="rgba(   ,   ,   ,1)" x="13" y="14"/><rect fill="rgba(   ,   ,   ,1)" x="14" y="14"/><rect fill="rgba(   ,   ,   ,1)" x="15" y="14"/><rect fill="rgba(   ,   ,   ,1)" x=" 0" y="15"/><rect fill="rgba(   ,   ,   ,1)" x=" 1" y="15"/><rect fill="rgba(   ,   ,   ,1)" x=" 2" y="15"/><rect fill="rgba(   ,   ,   ,1)" x=" 3" y="15"/><rect fill="rgba(   ,   ,   ,1)" x=" 4" y="15"/><rect fill="rgba(   ,   ,   ,1)" x=" 5" y="15"/><rect fill="rgba(   ,   ,   ,1)" x=" 6" y="15"/><rect fill="rgba(   ,   ,   ,1)" x=" 7" y="15"/><rect fill="rgba(   ,   ,   ,1)" x=" 8" y="15"/><rect fill="rgba(   ,   ,   ,1)" x=" 9" y="15"/><rect fill="rgba(   ,   ,   ,1)" x="10" y="15"/><rect fill="rgba(   ,   ,   ,1)" x="11" y="15"/><rect fill="rgba(   ,   ,   ,1)" x="12" y="15"/><rect fill="rgba(   ,   ,   ,1)" x="13" y="15"/><rect fill="rgba(   ,   ,   ,1)" x="14" y="15"/><rect fill="rgba(   ,   ,   ,1)" x="15" y="15"/>';
+
+    uint256 private constant RECT_SIZE = 40;
+    bytes private constant RECT = '<rect fill="%23        " x="  " y="  "/>';
 
     struct Color {
         uint8 r;
@@ -28,48 +29,84 @@ library SVG {
         view
         returns (bytes memory encoded)
     {
-        encoded = RECTS;
+        // Output length
+        uint256 encodedLength = RECT_SIZE * IMAGE_WIDTH * IMAGE_HEIGHT;
+
+        // Load the rect element into memory
+        bytes memory rect = RECT;
+        // Load hex chars into memory
+        bytes memory hexChars = HEX_CHARS;
+
+        // Allocate a new bytes variable
+        encoded = new bytes(encodedLength);
+
         assembly {
+            // rect ptr, jump over length
+            let rectPtr := add(rect, 32)
+            let hexCharsPtr := add(hexChars, 1)
+
             // encoded ptr, jump over length
             let encodedPtr := add(encoded, 32)
-            // let encodedEndPtr := add(12288, 32)
-            let encodedEndPtr := add(encodedPtr, mload(encoded))
+            let encodedEndPtr := add(encodedPtr, encodedLength)
 
             for {
-
+                let i := 0
             } lt(encodedPtr, encodedEndPtr) {
-
+                i := add(i, 1)
             } {
+                // copy rect data (the first chunk of 32 bytes)
+                mstore(encodedPtr, mload(rectPtr))
+                // copy rect data (the remaining bytes)
+                mstore(add(encodedPtr, 32), mload(add(rectPtr, 32)))
+
                 // move to first color position
-                encodedPtr := add(encodedPtr, 17)
+                encodedPtr := add(encodedPtr, 15)
 
                 // red
-                mstore8(encodedPtr, 49)
+                mstore8(encodedPtr, mload(add(hexCharsPtr, 1)))
                 encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, 50)
+                mstore8(encodedPtr, mload(add(hexCharsPtr, 2)))
                 encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, 51)
-                encodedPtr := add(encodedPtr, 2)
 
                 // green
-                mstore8(encodedPtr, 49)
+                mstore8(encodedPtr, mload(add(hexCharsPtr, 3)))
                 encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, 50)
+                mstore8(encodedPtr, mload(add(hexCharsPtr, 4)))
                 encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, 51)
-                encodedPtr := add(encodedPtr, 2)
 
                 // blue
-                mstore8(encodedPtr, 49)
+                mstore8(encodedPtr, mload(add(hexCharsPtr, 5)))
                 encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, 50)
+                mstore8(encodedPtr, mload(add(hexCharsPtr, 6)))
                 encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, 51)
 
+                // alpha
+                mstore8(encodedPtr, mload(add(hexCharsPtr, 15)))
+                encodedPtr := add(encodedPtr, 1)
+                mstore8(encodedPtr, mload(add(hexCharsPtr, 15)))
+                encodedPtr := add(encodedPtr, 6)
+
+                // x
+                let j := gt(mod(i, IMAGE_WIDTH), 9)
+                if j {
+                    mstore8(encodedPtr, 49)
+                }
+                encodedPtr := add(encodedPtr, 1)
+                mstore8(encodedPtr, add(mod(mod(i, IMAGE_WIDTH), 10), 48))
+                encodedPtr := add(encodedPtr, 6)
+
+                // y
+                j := gt(mod(i, IMAGE_HEIGHT), 9)
+                if j {
+                    mstore8(encodedPtr, 49)
+                }
+                encodedPtr := add(encodedPtr, 1)
+                mstore8(encodedPtr, add(mod(div(i, IMAGE_WIDTH), 10), 48))
                 // move to the end of the rect element
-                encodedPtr := add(encodedPtr, 21)
+                encodedPtr := add(encodedPtr, 4)
             }
         }
+
         // Color[] memory colorTable = _encodeColorTable(data);
         // for (uint256 y = 0; y < IMAGE_HEIGHT; y++) {
         //     for (uint256 x = 0; x < IMAGE_WIDTH; x++) {
