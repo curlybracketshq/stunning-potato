@@ -78,6 +78,18 @@ library SVG {
             // Jump over length (1) + packed fields (1) + color table (12)
             let dataPtr := add(data, 14)
 
+            /**
+             * Returns two bytes that represent the input byte `b` encoded as a
+             * hexadecimal string.
+             *
+             * `hexTable` is the pointer to the hexadecimal chars table (0-F).
+             *
+             * Examples:
+             *
+             * - `byteToHex(255, hexCharsPtr)` -> h = 'F', l = 'F'
+             * - `byteToHex(128, hexCharsPtr)` -> h = '8', l = '0'
+             * - `byteToHex(15,  hexCharsPtr)` -> h = '0', l = 'F'
+             */
             function byteToHex(b, hexTable) -> h, l {
                 h := mload(add(hexTable, shr(4, and(b, 0xf0))))
                 l := mload(add(hexTable, and(b, 0xf)))
@@ -138,30 +150,31 @@ library SVG {
                 )
 
                 // Red
-                let r := mload(add(colorTablePtr, mul(colorIndex, 3)))
+                let r := mload(add(colorTablePtr, mul(colorIndex, 4)))
                 mstore8(encodedPtr, byteToHexH(r, hexCharsPtr))
                 encodedPtr := add(encodedPtr, 1)
                 mstore8(encodedPtr, byteToHexL(r, hexCharsPtr))
                 encodedPtr := add(encodedPtr, 1)
 
                 // Green
-                let g := mload(add(colorTablePtr, add(mul(colorIndex, 3), 1)))
+                let g := mload(add(colorTablePtr, add(mul(colorIndex, 4), 1)))
                 mstore8(encodedPtr, byteToHexH(g, hexCharsPtr))
                 encodedPtr := add(encodedPtr, 1)
                 mstore8(encodedPtr, byteToHexL(g, hexCharsPtr))
                 encodedPtr := add(encodedPtr, 1)
 
                 // Blue
-                let b := mload(add(colorTablePtr, add(mul(colorIndex, 3), 2)))
+                let b := mload(add(colorTablePtr, add(mul(colorIndex, 4), 2)))
                 mstore8(encodedPtr, byteToHexH(b, hexCharsPtr))
                 encodedPtr := add(encodedPtr, 1)
                 mstore8(encodedPtr, byteToHexL(b, hexCharsPtr))
                 encodedPtr := add(encodedPtr, 1)
 
                 // Alpha
-                mstore8(encodedPtr, mload(add(hexCharsPtr, 15)))
+                let a := mload(add(colorTablePtr, add(mul(colorIndex, 4), 3)))
+                mstore8(encodedPtr, byteToHexH(a, hexCharsPtr))
                 encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, mload(add(hexCharsPtr, 15)))
+                mstore8(encodedPtr, byteToHexL(a, hexCharsPtr))
                 // Move to the beginning of the x coordinate
                 encodedPtr := add(encodedPtr, 14)
 
@@ -193,12 +206,16 @@ library SVG {
         pure
         returns (bytes memory colorTable)
     {
-        // CSS colors in the 24-bit color space
-        colorTable = new bytes(COLORS_NUMBER * 3);
+        // The first bit in the packed fields is the transparency flag
+        bool hasTransparency = uint8(data[0]) & 0x80 == 0x80;
+        // Bits 2 to 5 in the packed fields are the transparency index
+        uint8 transparencyIndex = (uint8(data[0]) & 0x78) >> 3;
+        // CSS colors in the 24-bit color space (3 bytes) + alpha
+        colorTable = new bytes(COLORS_NUMBER * 4);
         for (uint256 i = 0; i < 4; i++) {
             // Skip the first byte that contains packed fields
             uint256 offset = 1 + i * 3;
-            bytes3 colorsGroup = bytes3(data[offset]) |
+            bytes3 colorsPack = bytes3(data[offset]) |
                 (bytes3(data[offset + 1]) >> 8) |
                 (bytes3(data[offset + 2]) >> 16);
 
@@ -206,22 +223,28 @@ library SVG {
             //
             // These are the colors position in the group of three bytes:
             //
-            // 1. colorsGroup >> 18 & 0x3f
-            // 2. colorsGroup >> 12 & 0x3f
-            // 3. colorsGroup >> 6 & 0x3f
-            // 4. colorsGroup & 0x3f
+            // 1. colorsPack >> 18 & 0x3f
+            // 2. colorsPack >> 12 & 0x3f
+            // 3. colorsPack >> 6 & 0x3f
+            // 4. colorsPack & 0x3f
             for (uint256 j = 0; j < 4; j++) {
                 // jth color in the 4 colors pack
                 bytes3 color = _encode24BitColor(
-                    bytes1((colorsGroup >> (6 * (3 - j))) << 16) & 0x3f
+                    bytes1((colorsPack >> (6 * (3 - j))) << 16) & 0x3f
                 );
-                uint256 colorIndex = (i * 4 + j) * 3;
+                uint256 colorIndex = (i * 4 + j) * 4;
                 // Red
                 colorTable[colorIndex] = color[0];
                 // Green
                 colorTable[colorIndex + 1] = color[1];
                 // Blue
                 colorTable[colorIndex + 2] = color[2];
+                // Alpha
+                if (hasTransparency && transparencyIndex == i * 4 + j) {
+                    colorTable[colorIndex + 3] = 0;
+                } else {
+                    colorTable[colorIndex + 3] = 0xff;
+                }
             }
         }
     }
