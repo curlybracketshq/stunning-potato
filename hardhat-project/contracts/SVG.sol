@@ -15,18 +15,13 @@ library SVG {
 
     bytes private constant HEX_CHARS = "0123456789ABCDEF";
 
-    uint256 private constant RECT_SIZE = 40;
-    bytes private constant RECT = '<rect fill="%23        " x="  " y="  "/>';
-
-    struct Color {
-        uint8 r;
-        uint8 g;
-        uint8 b;
-    }
+    uint256 private constant RECT_SIZE = 59;
+    bytes private constant RECT =
+        '<rect fill="#        " x="  " y="  " width="1" height="1"/>';
 
     function encodeFrame(bytes memory data)
         internal
-        view
+        pure
         returns (bytes memory encoded)
     {
         // Output length
@@ -40,53 +35,107 @@ library SVG {
         // Allocate a new bytes variable
         encoded = new bytes(encodedLength);
 
+        bytes memory colorTable = _encodeColorTable(data);
+
         assembly {
-            // rect ptr, jump over length
+            // Rect ptr, jump over length
             let rectPtr := add(rect, 32)
             let hexCharsPtr := add(hexChars, 1)
 
-            // encoded ptr, jump over length
+            // Encoded ptr, jump over length
             let encodedPtr := add(encoded, 32)
             let encodedEndPtr := add(encodedPtr, encodedLength)
+
+            // Color table ptr, jump over length
+            let colorTablePtr := add(colorTable, 1)
+
+            // Data ptr
+            // Jump over length (1) + packed fields (1) + color table (12)
+            let dataPtr := add(data, 14)
+
+            function byteToHex(b, hexTable) -> h, l {
+                h := mload(add(hexTable, shr(4, and(b, 0xf0))))
+                l := mload(add(hexTable, and(b, 0xf)))
+            }
+
+            /**
+             * Same as: let h, _ := byteToHex(b, hexTable)
+             */
+            function byteToHexH(b, hexTable) -> h {
+                h := mload(add(hexTable, shr(4, and(b, 0xf0))))
+            }
+
+            /**
+             * Same as: let _, l := byteToHex(b, hexTable)
+             */
+            function byteToHexL(b, hexTable) -> l {
+                l := mload(add(hexTable, and(b, 0xf)))
+            }
+
+            // DEBUG DATA CONTENT
+            // for {
+            //     let i := 0
+            // } lt(i, 256) {
+            //     i := add(i, 1)
+            // } {
+            //     let p := i
+            //     let word := mload(add(dataPtr, p))
+            //     let h, l := byteToHex(word, hexCharsPtr)
+            //     mstore8(encodedPtr, h)
+            //     encodedPtr := add(encodedPtr, 1)
+            //     mstore8(encodedPtr, l)
+            //     encodedPtr := add(encodedPtr, 1)
+            // }
 
             for {
                 let i := 0
             } lt(encodedPtr, encodedEndPtr) {
                 i := add(i, 1)
             } {
-                // copy rect data (the first chunk of 32 bytes)
+                // Copy rect data (the first chunk of 32 bytes)
                 mstore(encodedPtr, mload(rectPtr))
-                // copy rect data (the remaining bytes)
+                // Copy rect data (the remaining bytes)
                 mstore(add(encodedPtr, 32), mload(add(rectPtr, 32)))
 
-                // move to first color position
-                encodedPtr := add(encodedPtr, 15)
+                // Move to first color position
+                encodedPtr := add(encodedPtr, 13)
 
-                // red
-                mstore8(encodedPtr, mload(add(hexCharsPtr, 1)))
-                encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, mload(add(hexCharsPtr, 2)))
-                encodedPtr := add(encodedPtr, 1)
+                // Get the color index (4 bits)
+                let couple := mload(add(dataPtr, div(i, 2)))
+                let mask := shr(mul(mod(i, 2), 4), 0xf0)
+                let colorIndex := shr(
+                    mul(mod(add(i, 1), 2), 4),
+                    and(couple, mask)
+                )
 
-                // green
-                mstore8(encodedPtr, mload(add(hexCharsPtr, 3)))
+                // Red
+                let r := mload(add(colorTablePtr, mul(colorIndex, 3)))
+                mstore8(encodedPtr, byteToHexH(r, hexCharsPtr))
                 encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, mload(add(hexCharsPtr, 4)))
-                encodedPtr := add(encodedPtr, 1)
-
-                // blue
-                mstore8(encodedPtr, mload(add(hexCharsPtr, 5)))
-                encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, mload(add(hexCharsPtr, 6)))
+                mstore8(encodedPtr, byteToHexL(r, hexCharsPtr))
                 encodedPtr := add(encodedPtr, 1)
 
-                // alpha
+                // Green
+                let g := mload(add(colorTablePtr, add(mul(colorIndex, 3), 1)))
+                mstore8(encodedPtr, byteToHexH(g, hexCharsPtr))
+                encodedPtr := add(encodedPtr, 1)
+                mstore8(encodedPtr, byteToHexL(g, hexCharsPtr))
+                encodedPtr := add(encodedPtr, 1)
+
+                // Blue
+                let b := mload(add(colorTablePtr, add(mul(colorIndex, 3), 2)))
+                mstore8(encodedPtr, byteToHexH(b, hexCharsPtr))
+                encodedPtr := add(encodedPtr, 1)
+                mstore8(encodedPtr, byteToHexL(b, hexCharsPtr))
+                encodedPtr := add(encodedPtr, 1)
+
+                // Alpha
                 mstore8(encodedPtr, mload(add(hexCharsPtr, 15)))
                 encodedPtr := add(encodedPtr, 1)
                 mstore8(encodedPtr, mload(add(hexCharsPtr, 15)))
                 encodedPtr := add(encodedPtr, 6)
 
-                // x
+                // Coord: x
                 let j := gt(mod(i, IMAGE_WIDTH), 9)
                 if j {
                     mstore8(encodedPtr, 49)
@@ -95,40 +144,17 @@ library SVG {
                 mstore8(encodedPtr, add(mod(mod(i, IMAGE_WIDTH), 10), 48))
                 encodedPtr := add(encodedPtr, 6)
 
-                // y
-                j := gt(mod(i, IMAGE_HEIGHT), 9)
+                // Coord: y
+                j := gt(div(i, IMAGE_HEIGHT), 9)
                 if j {
                     mstore8(encodedPtr, 49)
                 }
                 encodedPtr := add(encodedPtr, 1)
                 mstore8(encodedPtr, add(mod(div(i, IMAGE_WIDTH), 10), 48))
-                // move to the end of the rect element
-                encodedPtr := add(encodedPtr, 4)
+                // Move to the end of the rect element
+                encodedPtr := add(encodedPtr, 25)
             }
         }
-
-        // Color[] memory colorTable = _encodeColorTable(data);
-        // for (uint256 y = 0; y < IMAGE_HEIGHT; y++) {
-        //     for (uint256 x = 0; x < IMAGE_WIDTH; x++) {
-        //         encoded = abi.encodePacked(
-        //             encoded,
-        //             // _encodeRect(colorTable[0], 1, x, y)
-        //             '<rect fill="rgba(',
-        //             Strings.toString(colorTable[0].r),
-        //             ",",
-        //             Strings.toString(colorTable[0].g),
-        //             ",",
-        //             Strings.toString(colorTable[0].b),
-        //             ",",
-        //             Strings.toString(1),
-        //             ')" x="',
-        //             Strings.toString(x),
-        //             '" y="',
-        //             Strings.toString(y),
-        //             '"/>'
-        //         );
-        //     }
-        // }
     }
 
     function encodeAnimation(bytes memory data)
@@ -140,91 +166,62 @@ library SVG {
         encoded = abi.encodePacked("");
     }
 
-    function _encodeRect(
-        Color memory color,
-        uint256 alpha,
-        uint256 x,
-        uint256 y
-    ) internal pure returns (bytes memory rect) {
-        rect = abi.encodePacked(
-            '<rect fill="',
-            _encodeCSSColor(color, alpha),
-            '" x="',
-            Strings.toString(x),
-            '" y="',
-            Strings.toString(y),
-            '"/>'
-        );
-    }
-
     function _encodeColorTable(bytes memory data)
         internal
-        view
-        returns (Color[] memory colorTable)
+        pure
+        returns (bytes memory colorTable)
     {
-        colorTable = new Color[](COLORS_NUMBER);
+        // CSS colors in the 24-bit color space
+        colorTable = new bytes(COLORS_NUMBER * 3);
         for (uint256 i = 0; i < 4; i++) {
+            // Skip the first byte that contains packed fields
             uint256 offset = 1 + i * 3;
-            console.log(offset);
-            bytes3 quadruplet = (data[offset + 2] << 16) |
-                (data[offset + 1] << 8) |
-                (data[offset]);
-            console.logBytes3(quadruplet);
-            colorTable[i * 4] = _encode24BitColor(
-                bytes1(quadruplet >> 18) & 0x3f
-            );
-            colorTable[i * 4 + 1] = _encode24BitColor(
-                bytes1(quadruplet >> 12) & 0x3f
-            );
-            colorTable[i * 4 + 2] = _encode24BitColor(
-                bytes1(quadruplet >> 6) & 0x3f
-            );
-            colorTable[i * 4 + 3] = _encode24BitColor(
-                bytes1(quadruplet) & 0x3f
-            );
+            bytes3 colorsGroup = bytes3(data[offset]) |
+                (bytes3(data[offset + 1]) >> 8) |
+                (bytes3(data[offset + 2]) >> 16);
+
+            // Extract each color in the 4 colors pack
+            //
+            // These are the colors position in the group of three bytes:
+            //
+            // 1. colorsGroup >> 18 & 0x3f
+            // 2. colorsGroup >> 12 & 0x3f
+            // 3. colorsGroup >> 6 & 0x3f
+            // 4. colorsGroup & 0x3f
+            for (uint256 j = 0; j < 4; j++) {
+                // jth color in the 4 colors pack
+                bytes3 color = _encode24BitColor(
+                    bytes1((colorsGroup >> (6 * (3 - j))) << 16) & 0x3f
+                );
+                uint256 colorIndex = (i * 4 + j) * 3;
+                // Red
+                colorTable[colorIndex] = color[0];
+                // Green
+                colorTable[colorIndex + 1] = color[1];
+                // Blue
+                colorTable[colorIndex + 2] = color[2];
+            }
         }
     }
 
     function _encode24BitColor(bytes1 color6Bit)
         internal
-        view
-        returns (Color memory color)
+        pure
+        returns (bytes3 color)
     {
         uint8 colNum = uint8(color6Bit);
 
-        uint8 lowR = colNum & 0x20;
-        uint8 lowG = colNum & 0x10;
-        uint8 lowB = colNum & 0x8;
-        uint8 hiR = colNum & 0x4;
-        uint8 hiG = colNum & 0x2;
+        uint8 lowR = (colNum & 0x20) >> 5;
+        uint8 lowG = (colNum & 0x10) >> 4;
+        uint8 lowB = (colNum & 0x8) >> 3;
+        uint8 hiR = (colNum & 0x4) >> 2;
+        uint8 hiG = (colNum & 0x2) >> 1;
         uint8 hiB = colNum & 0x1;
 
-        uint8 r = 0x55 * lowR + 0xaa * hiR;
-        uint8 g = 0x55 * lowG + 0xaa * hiG;
-        uint8 b = 0x55 * lowB + 0xaa * hiB;
+        bytes1 r = bytes1(0x55 * lowR + 0xaa * hiR);
+        bytes1 g = bytes1(0x55 * lowG + 0xaa * hiG);
+        bytes1 b = bytes1(0x55 * lowB + 0xaa * hiB);
 
-        color = Color(r, g, b);
-    }
-
-    function _encodeCSSColor(Color memory color, uint256 alpha)
-        internal
-        pure
-        returns (bytes memory cssColor)
-    {
-        cssColor = abi.encodePacked(
-            "rgba(",
-            Strings.toString(color.r),
-            ",",
-            Strings.toString(color.g),
-            ",",
-            Strings.toString(color.b),
-            ",",
-            Strings.toString(alpha),
-            ")"
-        );
-    }
-
-    function _encodeHex(uint8 n) internal pure returns (bytes memory h) {
-        h = abi.encodePacked(HEX_CHARS[n >> 4], HEX_CHARS[n & 0xf]);
+        color = bytes3(r) | (bytes3(g) >> 8) | (bytes3(b) >> 16);
     }
 }
