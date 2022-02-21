@@ -15,11 +15,36 @@ library SVG {
 
     bytes private constant HEX_CHARS = "0123456789ABCDEF";
 
-    uint256 private constant RECT_SIZE = 59;
+    uint256 private constant RECT_SIZE = 115;
+    // Double URL encoded because it will be part of the image data URI that is
+    // embedded in the metadata URL encoded data URI
     bytes private constant RECT =
-        '<rect fill="#        " x="  " y="  " width="1" height="1"/>';
+        "%253Crect%2520fill%253D'%2523        '%2520x%253D'  '%2520y%253D'  '%2520width%253D'1'%2520height%253D'1'%252F%253E";
 
     function encodeFrame(bytes memory data)
+        internal
+        pure
+        returns (bytes memory encoded)
+    {
+        // Double URL encoded because it will be part of the image data URI that
+        // is embedded in the metadata URL encoded data URI
+        encoded = abi.encodePacked(
+            "%253Csvg%2520version%253D'1.1'%2520width%253D'16'%2520height%253D'16'%2520xmlns%253D'http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg'%253E",
+            _encodeBitmap(data),
+            "%253C%252Fsvg%253E"
+        );
+    }
+
+    function encodeAnimation(bytes memory data)
+        internal
+        pure
+        returns (bytes memory encoded)
+    {
+        // TODO
+        encoded = abi.encodePacked("");
+    }
+
+    function _encodeBitmap(bytes memory data)
         internal
         pure
         returns (bytes memory encoded)
@@ -94,11 +119,15 @@ library SVG {
             } {
                 // Copy rect data (the first chunk of 32 bytes)
                 mstore(encodedPtr, mload(rectPtr))
-                // Copy rect data (the remaining bytes)
+                // Copy rect data (the second chunk of 32 bytes)
                 mstore(add(encodedPtr, 32), mload(add(rectPtr, 32)))
+                // Copy rect data (the third chunk of 32 bytes)
+                mstore(add(encodedPtr, 64), mload(add(rectPtr, 64)))
+                // Copy rect data (the remaining bytes)
+                mstore(add(encodedPtr, 96), mload(add(rectPtr, 96)))
 
                 // Move to first color position
-                encodedPtr := add(encodedPtr, 13)
+                encodedPtr := add(encodedPtr, 29)
 
                 // Get the color index (4 bits)
                 let couple := mload(add(dataPtr, div(i, 2)))
@@ -133,7 +162,8 @@ library SVG {
                 mstore8(encodedPtr, mload(add(hexCharsPtr, 15)))
                 encodedPtr := add(encodedPtr, 1)
                 mstore8(encodedPtr, mload(add(hexCharsPtr, 15)))
-                encodedPtr := add(encodedPtr, 6)
+                // Move to the beginning of the x coordinate
+                encodedPtr := add(encodedPtr, 14)
 
                 // Coord: x
                 let j := gt(mod(i, IMAGE_WIDTH), 9)
@@ -142,7 +172,8 @@ library SVG {
                 }
                 encodedPtr := add(encodedPtr, 1)
                 mstore8(encodedPtr, add(mod(mod(i, IMAGE_WIDTH), 10), 48))
-                encodedPtr := add(encodedPtr, 6)
+                // Move to the beginning of the y coordinate
+                encodedPtr := add(encodedPtr, 14)
 
                 // Coord: y
                 j := gt(div(i, IMAGE_HEIGHT), 9)
@@ -152,18 +183,9 @@ library SVG {
                 encodedPtr := add(encodedPtr, 1)
                 mstore8(encodedPtr, add(mod(div(i, IMAGE_WIDTH), 10), 48))
                 // Move to the end of the rect element
-                encodedPtr := add(encodedPtr, 25)
+                encodedPtr := add(encodedPtr, 49)
             }
         }
-    }
-
-    function encodeAnimation(bytes memory data)
-        internal
-        pure
-        returns (bytes memory encoded)
-    {
-        // TODO
-        encoded = abi.encodePacked("");
     }
 
     function _encodeColorTable(bytes memory data)

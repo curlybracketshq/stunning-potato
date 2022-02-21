@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Base64.sol";
 import "./SVG.sol";
 
 contract StunningPotato is
@@ -66,18 +65,6 @@ contract StunningPotato is
      * Price for creating a new animation
      */
     uint256 public constant PRICE_ANIMATION = 0.01 ether;
-
-    /**
-     * Token metadata header
-     *
-     * Token metadata is a data URL that contains a JSON that conforms to the
-     * ERC721 Metadata JSON Schema.
-     *
-     * See https://eips.ethereum.org/EIPS/eip-721
-     * See https://datatracker.ietf.org/doc/html/rfc2397
-     */
-    string private constant METADATA_HEADER =
-        "data:application/json,%7B%22description%22%3A%22Very%20expensive%20pixel%20art%20animations.%22%2C%22image%22%3A%22data%3Aimage%2Fsvg%3Bbase64%2C";
 
     // Mapping from token ID to resources
     mapping(uint256 => Resource) private _resources;
@@ -297,6 +284,13 @@ contract StunningPotato is
         return _metadata(tokenId);
     }
 
+    /**
+     * Token metadata is a data URL that contains a JSON that conforms to the
+     * ERC721 Metadata JSON Schema.
+     *
+     * See https://eips.ethereum.org/EIPS/eip-721
+     * See https://datatracker.ietf.org/doc/html/rfc2397
+     */
     function _metadata(uint256 tokenId)
         private
         view
@@ -304,17 +298,19 @@ contract StunningPotato is
     {
         require(_exists(tokenId), "Token doesn't exists");
 
-        bytes memory gifData;
+        bytes memory imageData;
         if (_resources[tokenId].resourceType == ResourceType.Frame) {
-            gifData = SVG.encodeFrame(_resources[tokenId].data);
+            imageData = SVG.encodeFrame(_resources[tokenId].data);
         } else {
-            gifData = SVG.encodeAnimation(_resources[tokenId].data);
+            imageData = SVG.encodeAnimation(_resources[tokenId].data);
         }
 
         metadata = string(
-            // TODO: Re-enable base64 encoding
-            // abi.encodePacked(METADATA_HEADER, Base64.encode(gifData), '"}')
-            abi.encodePacked(METADATA_HEADER, gifData, "%22%7D")
+            abi.encodePacked(
+                "data:application/json,%7B%22description%22%3A%22Very%20expensive%20pixel%20art%20animations.%22%2C%22image%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C",
+                imageData,
+                "%22%7D"
+            )
         );
     }
 
