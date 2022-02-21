@@ -15,6 +15,9 @@ library SVG {
 
     bytes private constant HEX_CHARS = "0123456789ABCDEF";
 
+    bytes private constant SVG_HEADER =
+        "%253Csvg%2520version%253D'1.1'%2520width%253D'16'%2520height%253D'16'%2520xmlns%253D'http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg'%253E";
+
     uint256 private constant RECT_SIZE = 115;
     // Double URL encoded because it will be part of the image data URI that is
     // embedded in the metadata URL encoded data URI
@@ -32,7 +35,7 @@ library SVG {
         // Double URL encoded because it will be part of the image data URI that
         // is embedded in the metadata URL encoded data URI
         encoded = abi.encodePacked(
-            "%253Csvg%2520version%253D'1.1'%2520width%253D'16'%2520height%253D'16'%2520xmlns%253D'http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg'%253E",
+            SVG_HEADER,
             _encodeBitmap(data, dataOffset),
             "%253C%252Fsvg%253E"
         );
@@ -120,7 +123,8 @@ library SVG {
         }
 
         encoded = abi.encodePacked(
-            "%253Csvg%2520version%253D'1.1'%2520width%253D'16'%2520height%253D'16'%2520xmlns%253D'http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg'%253E%253Cdefs%253E",
+            SVG_HEADER,
+            "%253Cdefs%253E",
             defs,
             "%253C%252Fdefs%253E%253Cuse%2520href%253D'%2523f0'%253E%253Canimate%2520attributeName%253D'href'%2520values%253D'",
             frameRefs,
