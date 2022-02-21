@@ -26,11 +26,14 @@ library SVG {
         pure
         returns (bytes memory encoded)
     {
+        // Jump over length (1) + packed fields (1) + color table (12)
+        uint256 dataOffset = 14;
+
         // Double URL encoded because it will be part of the image data URI that
         // is embedded in the metadata URL encoded data URI
         encoded = abi.encodePacked(
             "%253Csvg%2520version%253D'1.1'%2520width%253D'16'%2520height%253D'16'%2520xmlns%253D'http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg'%253E",
-            _encodeBitmap(data),
+            _encodeBitmap(data, dataOffset),
             "%253C%252Fsvg%253E"
         );
     }
@@ -40,11 +43,96 @@ library SVG {
         pure
         returns (bytes memory encoded)
     {
-        // TODO
-        encoded = abi.encodePacked("");
+        // Bits 1 to 4 in the packed fields is the number of frames minus one
+        uint8 framesCount = ((uint8(data[0]) & 0xf0) >> 4) + 1;
+
+        // Bit 5 in the packed fields is the animation loop style
+        // 0: loop
+        // 1: ping pong
+        bool isPingPongLoopStyle = uint8(data[0]) & 0x8 == 0x8;
+
+        // Bits 6 to 7 in the packed fields is the animation frame rate
+        // 0: 10 fps
+        // 1: 25 fps
+        // 2: 50 fps
+        // 3: 100 fps
+        uint8 frameRateClass = (uint8(data[0]) & 0x6) >> 1;
+        bytes memory frameDurationMs;
+        if (frameRateClass == 0) {
+            frameDurationMs = "100";
+        } else if (frameRateClass == 1) {
+            frameDurationMs = "40";
+        } else if (frameRateClass == 2) {
+            frameDurationMs = "20";
+        } else if (frameRateClass == 3) {
+            frameDurationMs = "10";
+        }
+
+        // Loop count
+        uint8 loopCount = uint8(data[1]);
+        string memory repeatCount;
+        if (loopCount == 0) {
+            repeatCount = "indefinite";
+        } else {
+            repeatCount = Strings.toString(loopCount);
+        }
+
+        // Define each frame
+        bytes memory defs = "";
+        // Jump over length (1) + packed fields (1) + color table (12)
+        uint256 dataOffset = 14;
+        for (uint256 f = 0; f < framesCount; f++) {
+            // Add frame data offset
+            dataOffset += 141 * f;
+
+            defs = abi.encodePacked(
+                defs,
+                "%253Cg%2520id%253D'f",
+                HEX_CHARS[f],
+                "'%253E",
+                _encodeBitmap(data, dataOffset),
+                "%253C%252Fg%253E"
+            );
+        }
+
+        // Refs start always at the first frame that is required to be present
+        bytes memory frameRefs = "%2523f0";
+        for (uint256 f = 1; f < framesCount; f++) {
+            frameRefs = abi.encodePacked(
+                frameRefs,
+                "%253B%2523f",
+                HEX_CHARS[f]
+            );
+        }
+
+        // If the loop style is ping-pong, add all the frames in reverse order
+        //
+        // Note: SVG doesn't support this animation style yet, see
+        // https://github.com/w3c/svgwg/issues/130
+        if (isPingPongLoopStyle) {
+            for (uint256 f = framesCount - 2; f >= 0; f--) {
+                frameRefs = abi.encodePacked(
+                    frameRefs,
+                    "%253B%2523f",
+                    HEX_CHARS[f]
+                );
+            }
+        }
+
+        encoded = abi.encodePacked(
+            "%253Csvg%2520version%253D'1.1'%2520width%253D'16'%2520height%253D'16'%2520xmlns%253D'http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg'%253E%253Cdefs%253E",
+            defs,
+            "%253C%252Fdefs%253E%253Cuse%2520href%253D'%2523f0'%253E%253Canimate%2520attributeName%253D'href'%2520values%253D'",
+            frameRefs,
+            "'%2520dur%253D'",
+            frameDurationMs,
+            "ms'%2520repeatCount%253D'",
+            repeatCount,
+            "'%252F%253E%253C%252Fuse%253E%253C%252Fsvg%253E"
+        );
     }
 
-    function _encodeBitmap(bytes memory data)
+    function _encodeBitmap(bytes memory data, uint256 dataOffset)
         internal
         pure
         returns (bytes memory encoded)
@@ -75,8 +163,7 @@ library SVG {
             let colorTablePtr := add(colorTable, 1)
 
             // Data ptr
-            // Jump over length (1) + packed fields (1) + color table (12)
-            let dataPtr := add(data, 14)
+            let dataPtr := add(data, dataOffset)
 
             /**
              * Returns two bytes that represent the input byte `b` encoded as a
