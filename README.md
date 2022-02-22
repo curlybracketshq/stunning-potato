@@ -32,7 +32,6 @@ stored on the Ethereum blockchain and it's backed by non-fungible tokens (NFT).
 - [12. Resources](#12-resources)
 - [13. Appendix](#13-appendix)
   - [13.1. Project name proposals](#131-project-name-proposals)
-  - [13.2. TODO](#132-todo)
 
 ## 1. Project inspiration
 
@@ -291,20 +290,3 @@ Name candidates:
   - ethga.xyz (Ethereum Graphics Adapter)
 - A ranch for bits, similar to "branch"
   - bitranch.xyz
-
-### 13.2. TODO
-
-- Generate a CID on a contract to verify that the content from the contract call
-  match the data stored on IPFS
-  - https://discuss.ipfs.io/t/sha256-content-hashing-in-solidoty/11793
-  - https://github.com/nihilium/solidity-ipfs-utils/blob/main/contracts/IpfsFunctions.sol
-- IPFS CID implementation using Multihash
-  - https://multiformats.io/multihash/
-  - https://richardschneider.github.io/net-ipfs-core/articles/multihash.html
-- Durability of resources on IPFS using pinning services
-  - https://docs.ipfs.io/concepts/persistence/#pinning-services
-  - An example pinning service: https://www.pinata.cloud/
-- Filecoin Storage Bridge
-  - https://eth.storage/docs/
-  - https://www.youtube.com/watch?v=PXbIrzBUpR8
-  - https://github.com/textileio/storage-js-basic-demo/tree/main/eth
