@@ -338,6 +338,21 @@ library SVG {
         }
     }
 
+    /**
+     * Transforms a 6-bit color, encoded with the EGA format, in a 24-bit color.
+     *
+     * The binary representation of a 6-bit color is in the form "rgbRGB" where
+     * the lowercase letters are the low-intensity bits, and uppercase letters
+     * are high-intensity bits.
+     *
+     * Low-intensity colors translate to a 0x55 value in the corresponding 8-bit
+     * channel, high-intensity colors translate to a 0xAA value in the
+     * corresponding 8-bit channel. When both low-intensity and high-intensity
+     * bits are on in the same channel, the resulting 8-bit value is the sum of
+     * the two values, that is 0x55 + 0xAA = 0xFF.
+     *
+     * See https://en.wikipedia.org/wiki/Enhanced_Graphics_Adapter#Color_palette
+     */
     function _encode24BitColor(bytes1 color6Bit)
         internal
         pure
