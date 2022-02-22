@@ -21,7 +21,7 @@ stored on the Ethereum blockchain and it's backed by non-fungible tokens (NFT).
   - [7.1. Why is forking important?](#71-why-is-forking-important)
   - [7.2. Forking a frame](#72-forking-a-frame)
   - [7.3. Forking an animation](#73-forking-an-animation)
-- [8. Forma specification](#8-forma-specification)
+- [8. Format specification](#8-format-specification)
   - [8.1. Frame format specification](#81-frame-format-specification)
   - [8.2. Animation format specification](#82-animation-format-specification)
 - [9. Smart contract](#9-smart-contract)
@@ -210,7 +210,7 @@ TODO
 
 TODO
 
-## 8. Forma specification
+## 8. Format specification
 
 ### 8.1. Frame format specification
 
