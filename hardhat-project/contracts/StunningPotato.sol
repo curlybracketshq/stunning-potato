@@ -1,14 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "hardhat/console.sol";
-
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./SVG.sol";
 
+/**
+ * Draw pixel art animations on the Ethereum blockchain.
+ *
+ * Errors:
+ *
+ * - E01: Token doesn't exist
+ * - E02: Invalid amount
+ * - E03: Transaction failure
+ * - E04: Invalid input data
+ */
 contract StunningPotato is
     ERC721,
     ERC721Enumerable,
@@ -97,7 +106,7 @@ contract StunningPotato is
         payable
         returns (uint256 tokenId)
     {
-        require(msg.value >= PRICE_FRAME, "Invalid amount");
+        require(msg.value >= PRICE_FRAME, "E02");
 
         tokenId = _createFrame(author, data);
 
@@ -105,7 +114,7 @@ contract StunningPotato is
         uint256 excess = msg.value - PRICE_ANIMATION;
         if (excess > 0) {
             (bool success, ) = msg.sender.call{value: excess}("");
-            require(success, "Return transaction failure");
+            require(success, "E03");
         }
     }
 
@@ -130,7 +139,7 @@ contract StunningPotato is
      * more information about the frame data spec.
      */
     function _validateFrameData(bytes calldata data) internal pure {
-        require(data.length == FRAME_DATA_SIZE, "Data must be valid");
+        require(data.length == FRAME_DATA_SIZE, "E04");
     }
 
     /**
@@ -157,7 +166,7 @@ contract StunningPotato is
         }
 
         uint256 totalPrice = PRICE_ANIMATION + newFramesCount * PRICE_FRAME;
-        require(msg.value >= totalPrice, "Invalid amount");
+        require(msg.value >= totalPrice, "E02");
 
         // TODO: Store a list of frame references instead of raw frame data
         _createResource(author, data, ResourceType.Animation);
@@ -166,7 +175,7 @@ contract StunningPotato is
         uint256 excess = msg.value - totalPrice;
         if (excess > 0) {
             (bool success, ) = msg.sender.call{value: excess}("");
-            require(success, "Return transaction failure");
+            require(success, "E03");
         }
     }
 
@@ -199,7 +208,7 @@ contract StunningPotato is
         require(
             data.length ==
                 APPLICATION_DATA_HEADER_SIZE + FRAME_DATA_SIZE * framesCount,
-            "Frames count is invalid"
+            "E04"
         );
     }
 
@@ -230,18 +239,10 @@ contract StunningPotato is
     }
 
     /**
-     * @dev Base URI for computing {tokenURI}. The resulting URI for each token
-     * will be the concatenation of the `baseURI` and the `tokenId`.
-     */
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://ethga.xyz/t/";
-    }
-
-    /**
      * @dev Returns data associated to a token.
      */
     function tokenData(uint256 tokenId) public view returns (bytes memory) {
-        require(_exists(tokenId), "Data query for nonexistent token");
+        require(_exists(tokenId), "E01");
 
         return _resources[tokenId].data;
     }
@@ -256,7 +257,7 @@ contract StunningPotato is
         override
         returns (address author, uint256 royaltyAmount)
     {
-        require(_exists(tokenId), "Royalty info for nonexistent token");
+        require(_exists(tokenId), "E01");
 
         author = _authors[tokenId];
         royaltyAmount = (salePrice * DEFAULT_ROYALTY_PERCENTAGE) / 100;
@@ -269,8 +270,53 @@ contract StunningPotato is
         uint256 balance = address(this).balance;
         if (balance > 0) {
             (bool success, ) = owner().call{value: address(this).balance}("");
-            require(success, "Transaction failure");
+            require(success, "E03");
         }
+    }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        require(_exists(tokenId), "E01");
+
+        return _metadata(tokenId);
+    }
+
+    /**
+     * Token metadata is a data URL that contains a JSON that conforms to the
+     * ERC721 Metadata JSON Schema.
+     *
+     * See https://eips.ethereum.org/EIPS/eip-721
+     * See https://datatracker.ietf.org/doc/html/rfc2397
+     */
+    function _metadata(uint256 tokenId)
+        private
+        view
+        returns (string memory metadata)
+    {
+        require(_exists(tokenId), "E01");
+
+        bytes memory imageData;
+        if (_resources[tokenId].resourceType == ResourceType.Frame) {
+            imageData = SVG.encodeFrame(_resources[tokenId].data);
+        } else {
+            imageData = SVG.encodeAnimation(_resources[tokenId].data);
+        }
+
+        metadata = string(
+            abi.encodePacked(
+                "data:application/json,%7B%22description%22%3A%22Very%20expensive%20pixel%20art%20animations.%22%2C%22image%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C",
+                imageData,
+                "%22%7D"
+            )
+        );
     }
 
     // The following functions are overrides required by Solidity.
