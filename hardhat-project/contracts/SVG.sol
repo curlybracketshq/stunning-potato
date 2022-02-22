@@ -27,14 +27,12 @@ library SVG {
         pure
         returns (bytes memory encoded)
     {
-        // Jump over length (1) + packed fields (1) + color table (12)
-        uint256 dataOffset = 14;
-
         // Double URL encoded because it will be part of the image data URI that
         // is embedded in the metadata URL encoded data URI
         encoded = abi.encodePacked(
             SVG_HEADER,
-            _encodeBitmap(data, dataOffset),
+            // Jump over length (1) + packed fields (1) + color table (12)
+            _encodeBitmap(data, 14),
             "%253C%252Fsvg%253E"
         );
     }
