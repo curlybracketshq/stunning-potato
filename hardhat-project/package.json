@@ -41,6 +41,7 @@
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.4",
     "hardhat": "^2.8.3",
+    "hardhat-contract-sizer": "^2.4.0",
     "hardhat-gas-reporter": "^1.0.7",
     "jsdom": "^19.0.0",
     "prettier": "^2.5.1",
