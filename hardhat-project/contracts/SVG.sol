@@ -3,8 +3,6 @@ pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "hardhat/console.sol";
-
 /**
  * Functions for rendering frames and animations as SVG.
  */
