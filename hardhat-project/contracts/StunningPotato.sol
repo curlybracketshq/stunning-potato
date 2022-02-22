@@ -8,6 +8,16 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./SVG.sol";
 
+/**
+ * Draw pixel art animations on the Ethereum blockchain.
+ *
+ * Errors:
+ *
+ * - E01: Token doesn't exist
+ * - E02: Invalid amount
+ * - E03: Transaction failure
+ * - E04: Invalid input data
+ */
 contract StunningPotato is
     ERC721,
     ERC721Enumerable,
@@ -96,7 +106,7 @@ contract StunningPotato is
         payable
         returns (uint256 tokenId)
     {
-        require(msg.value >= PRICE_FRAME, "Invalid amount");
+        require(msg.value >= PRICE_FRAME, "E02");
 
         tokenId = _createFrame(author, data);
 
@@ -104,7 +114,7 @@ contract StunningPotato is
         uint256 excess = msg.value - PRICE_ANIMATION;
         if (excess > 0) {
             (bool success, ) = msg.sender.call{value: excess}("");
-            require(success, "Return transaction failure");
+            require(success, "E03");
         }
     }
 
@@ -129,7 +139,7 @@ contract StunningPotato is
      * more information about the frame data spec.
      */
     function _validateFrameData(bytes calldata data) internal pure {
-        require(data.length == FRAME_DATA_SIZE, "Data must be valid");
+        require(data.length == FRAME_DATA_SIZE, "E04");
     }
 
     /**
@@ -156,7 +166,7 @@ contract StunningPotato is
         }
 
         uint256 totalPrice = PRICE_ANIMATION + newFramesCount * PRICE_FRAME;
-        require(msg.value >= totalPrice, "Invalid amount");
+        require(msg.value >= totalPrice, "E02");
 
         // TODO: Store a list of frame references instead of raw frame data
         _createResource(author, data, ResourceType.Animation);
@@ -165,7 +175,7 @@ contract StunningPotato is
         uint256 excess = msg.value - totalPrice;
         if (excess > 0) {
             (bool success, ) = msg.sender.call{value: excess}("");
-            require(success, "Return transaction failure");
+            require(success, "E03");
         }
     }
 
@@ -198,7 +208,7 @@ contract StunningPotato is
         require(
             data.length ==
                 APPLICATION_DATA_HEADER_SIZE + FRAME_DATA_SIZE * framesCount,
-            "Frames count is invalid"
+            "E04"
         );
     }
 
@@ -232,7 +242,7 @@ contract StunningPotato is
      * @dev Returns data associated to a token.
      */
     function tokenData(uint256 tokenId) public view returns (bytes memory) {
-        require(_exists(tokenId), "Data query for nonexistent token");
+        require(_exists(tokenId), "E01");
 
         return _resources[tokenId].data;
     }
@@ -247,7 +257,7 @@ contract StunningPotato is
         override
         returns (address author, uint256 royaltyAmount)
     {
-        require(_exists(tokenId), "Royalty info for nonexistent token");
+        require(_exists(tokenId), "E01");
 
         author = _authors[tokenId];
         royaltyAmount = (salePrice * DEFAULT_ROYALTY_PERCENTAGE) / 100;
@@ -260,7 +270,7 @@ contract StunningPotato is
         uint256 balance = address(this).balance;
         if (balance > 0) {
             (bool success, ) = owner().call{value: address(this).balance}("");
-            require(success, "Transaction failure");
+            require(success, "E03");
         }
     }
 
@@ -274,10 +284,7 @@ contract StunningPotato is
         override
         returns (string memory)
     {
-        require(
-            _exists(tokenId),
-            "ERC721Metadata: URI query for nonexistent token"
-        );
+        require(_exists(tokenId), "E01");
 
         return _metadata(tokenId);
     }
@@ -294,7 +301,7 @@ contract StunningPotato is
         view
         returns (string memory metadata)
     {
-        require(_exists(tokenId), "Token doesn't exists");
+        require(_exists(tokenId), "E01");
 
         bytes memory imageData;
         if (_resources[tokenId].resourceType == ResourceType.Frame) {

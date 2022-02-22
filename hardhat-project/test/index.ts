@@ -280,7 +280,7 @@ describe("StunningPotato", function () {
         frameData,
         { value: ethers.utils.parseEther("0.1") }
       )
-    ).to.be.revertedWith("Data must be valid");
+    ).to.be.revertedWith("E04");
   });
 
   it("Should reject duplicate frames", async function () {
@@ -421,7 +421,7 @@ describe("StunningPotato", function () {
         animationData,
         { value: ethers.utils.parseEther("0.1") }
       )
-    ).to.be.revertedWith("Frames count is invalid");
+    ).to.be.revertedWith("E04");
   });
 
   it("Should reject invalid animation data (frames count doesn't match)", async function () {
@@ -432,7 +432,7 @@ describe("StunningPotato", function () {
         animationData,
         { value: ethers.utils.parseEther("0.1") }
       )
-    ).to.be.revertedWith("Frames count is invalid");
+    ).to.be.revertedWith("E04");
   });
 
   it("Should allow the owner to withdraw funds", async function () {
