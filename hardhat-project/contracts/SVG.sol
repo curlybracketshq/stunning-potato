@@ -238,34 +238,24 @@ library SVG {
                     and(couple, mask)
                 )
 
-                // Red
-                let r := mload(add(colorTablePtr, mul(colorIndex, 4)))
-                mstore8(encodedPtr, byteToHexH(r, hexCharsPtr))
-                encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, byteToHexL(r, hexCharsPtr))
-                encodedPtr := add(encodedPtr, 1)
+                // Write fill color
+                // Iterate over each byte of the color: red, green, blue, alpha
+                for {
+                    let j := 0
+                } lt(j, 4) {
+                    j := add(j, 1)
+                } {
+                    let v := mload(
+                        add(colorTablePtr, add(mul(colorIndex, 4), j))
+                    )
+                    mstore8(encodedPtr, byteToHexH(v, hexCharsPtr))
+                    encodedPtr := add(encodedPtr, 1)
+                    mstore8(encodedPtr, byteToHexL(v, hexCharsPtr))
+                    encodedPtr := add(encodedPtr, 1)
+                }
 
-                // Green
-                let g := mload(add(colorTablePtr, add(mul(colorIndex, 4), 1)))
-                mstore8(encodedPtr, byteToHexH(g, hexCharsPtr))
-                encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, byteToHexL(g, hexCharsPtr))
-                encodedPtr := add(encodedPtr, 1)
-
-                // Blue
-                let b := mload(add(colorTablePtr, add(mul(colorIndex, 4), 2)))
-                mstore8(encodedPtr, byteToHexH(b, hexCharsPtr))
-                encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, byteToHexL(b, hexCharsPtr))
-                encodedPtr := add(encodedPtr, 1)
-
-                // Alpha
-                let a := mload(add(colorTablePtr, add(mul(colorIndex, 4), 3)))
-                mstore8(encodedPtr, byteToHexH(a, hexCharsPtr))
-                encodedPtr := add(encodedPtr, 1)
-                mstore8(encodedPtr, byteToHexL(a, hexCharsPtr))
                 // Move to the beginning of the x coordinate
-                encodedPtr := add(encodedPtr, 14)
+                encodedPtr := add(encodedPtr, 13)
 
                 // Coord: x
                 let j := gt(mod(i, IMAGE_WIDTH), 9)
