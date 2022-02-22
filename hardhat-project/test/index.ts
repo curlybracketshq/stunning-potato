@@ -29,10 +29,10 @@ describe("StunningPotato", function () {
   const PRICE_FRAME = ethers.utils.parseEther("0.01");
   const PRICE_ANIMATION = ethers.utils.parseEther("0.01");
 
-  const GAS_COST_CREATE_FRAME = '315134';
-  const GAS_COST_CREATE_FRAME_WITH_TRANSPARENCY = '315146';
-  const GAS_COST_CREATE_ANIMATION = '411301';
-  const GAS_COST_CREATE_ANIMATION_LARGE = '615022';
+  const GAS_COST_CREATE_FRAME = '313498';
+  const GAS_COST_CREATE_FRAME_WITH_TRANSPARENCY = '313510';
+  const GAS_COST_CREATE_ANIMATION = '407412';
+  const GAS_COST_CREATE_ANIMATION_LARGE = '600573';
 
   // `beforeEach` will run before each test, re-deploying the contract every
   // time. It receives a callback, which can be async.
