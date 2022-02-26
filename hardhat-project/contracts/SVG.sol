@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
+import "hardhat/console.sol";
+
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
@@ -31,8 +33,7 @@ library SVG {
         // is embedded in the metadata URL encoded data URI
         encoded = abi.encodePacked(
             SVG_HEADER,
-            // Jump over length (1) + packed fields (1) + color table (12)
-            _encodeBitmap(data, 14),
+            _encodeBitmap(data, 0),
             "%253C%252Fsvg%253E"
         );
     }
@@ -77,22 +78,7 @@ library SVG {
         }
 
         // Define each frame
-        bytes memory defs = "";
-        // Jump over length (1) + packed fields (1) + color table (12)
-        uint256 dataOffset = 14;
-        for (uint256 f = 0; f < framesCount; f++) {
-            // Add frame data offset
-            dataOffset += 141 * f;
-
-            defs = abi.encodePacked(
-                defs,
-                "%253Cg%2520id%253D'f",
-                HEX_CHARS[f],
-                "'%253E",
-                _encodeBitmap(data, dataOffset),
-                "%253C%252Fg%253E"
-            );
-        }
+        bytes memory defs = _encodeAnimationFrames(framesCount, data);
 
         // Refs start always at the first frame that is required to be present
         bytes memory frameRefs = "%2523f0";
@@ -148,7 +134,10 @@ library SVG {
         // Allocate a new bytes variable
         encoded = new bytes(encodedLength);
 
-        bytes memory colorTable = _encodeColorTable(data);
+        bytes memory colorTable = _encodeColorTable(data, dataOffset);
+
+        // Jump over packed fields (1) + color table (12)
+        dataOffset += 13;
 
         assembly {
             // Rect ptr, jump over length
@@ -162,8 +151,8 @@ library SVG {
             // Color table ptr, jump over length
             let colorTablePtr := add(colorTable, 1)
 
-            // Data ptr
-            let dataPtr := add(data, dataOffset)
+            // Data ptr, jump over length
+            let dataPtr := add(add(data, dataOffset), 1)
 
             /**
              * Returns two bytes that represent the input byte `b` encoded as a
@@ -196,7 +185,12 @@ library SVG {
                 l := mload(add(hexTable, and(b, 0xf)))
             }
 
-            // DEBUG DATA CONTENT
+            /*
+             * DUMP MEMORY CONTENT
+             *
+             * Use this piece of code for dump the content of a variable in the
+             * output bytes string in hex format for debugging purpose.
+             */
             // for {
             //     let i := 0
             // } lt(i, 256) {
@@ -276,23 +270,172 @@ library SVG {
         }
     }
 
-    function _encodeColorTable(bytes memory data)
+    function _encodeAnimationFrames(uint8 framesCount, bytes memory data)
+        internal
+        pure
+        returns (bytes memory defs)
+    {
+        // Load hex chars into memory
+        bytes memory hexChars = HEX_CHARS;
+
+        // Output length
+        //
+        // 43 is the number of bytes used by the <g> container element:
+        //
+        // - 20 bytes - header
+        // -  1 byte  - id (a single hex char is enought to encode at most 16
+        //              different frames)
+        // -  6 bytes - header closing
+        // - 16 bytes - footer
+        uint256 defLength = RECT_SIZE * IMAGE_WIDTH * IMAGE_HEIGHT + 43;
+
+        // Allocate a new bytes variable
+        defs = new bytes(defLength * framesCount);
+
+        // Offset for reading frame data
+        // Jump over frames count (1) and packed fields (1)
+        uint256 frameDataOffset = 2;
+        // Offset for storing data in the defs bytes
+        uint256 defsOffset = 0;
+
+        for (uint256 f = 0; f < framesCount; f++) {
+            bytes memory bitmap = _encodeBitmap(data, frameDataOffset);
+
+            assembly {
+                /**
+                 * Returns two bytes that represent the input byte `b` encoded as a
+                 * hexadecimal string.
+                 *
+                 * `hexTable` is the pointer to the hexadecimal chars table (0-F).
+                 *
+                 * Examples:
+                 *
+                 * - `byteToHex(255, hexCharsPtr)` -> h = 'F', l = 'F'
+                 * - `byteToHex(128, hexCharsPtr)` -> h = '8', l = '0'
+                 * - `byteToHex(15,  hexCharsPtr)` -> h = '0', l = 'F'
+                 */
+                function byteToHex(b, hexTable) -> h, l {
+                    h := mload(add(hexTable, shr(4, and(b, 0xf0))))
+                    l := mload(add(hexTable, and(b, 0xf)))
+                }
+
+                /**
+                 * Same as: let h, _ := byteToHex(b, hexTable)
+                 */
+                function byteToHexH(b, hexTable) -> h {
+                    h := mload(add(hexTable, shr(4, and(b, 0xf0))))
+                }
+
+                /**
+                 * Same as: let _, l := byteToHex(b, hexTable)
+                 */
+                function byteToHexL(b, hexTable) -> l {
+                    l := mload(add(hexTable, and(b, 0xf)))
+                }
+
+                // Defs ptr, jump over length, jump over existing defs
+                let defsPtr := add(add(defs, 32), defsOffset)
+                // Bitmap ptr, jump over length
+                let bitmapPtr := add(bitmap, 32)
+                let hexCharsPtr := add(hexChars, 1)
+
+                // Copy <g> header data
+                mstore(defsPtr, "%253Cg%2520id%253D'f")
+                defsPtr := add(defsPtr, 20)
+
+                /*
+                 * DUMP MEMORY CONTENT
+                 *
+                 * Use this piece of code for dump the content of a variable in
+                 * the output bytes string in hex format for debugging purpose.
+                 */
+                // for {
+                //     let i := 0
+                // } lt(i, 256) {
+                //     i := add(i, 1)
+                // } {
+                //     let p := i
+                //     let word := mload(add(defsPtr, p))
+                //     mstore8(
+                //         add(defsPtr, mul(i, 2)),
+                //         byteToHexH(word, hexCharsPtr)
+                //     )
+                //     mstore8(
+                //         add(defsPtr, add(mul(i, 2), 1)),
+                //         byteToHexL(word, hexCharsPtr)
+                //     )
+                // }
+
+                // Store frame def id
+                mstore8(defsPtr, mload(add(hexCharsPtr, f)))
+                defsPtr := add(defsPtr, 1)
+
+                // Copy <g> header closing data
+                mstore(defsPtr, "'%253E")
+                defsPtr := add(defsPtr, 6)
+
+                // Bitmap data size is set by `_encodeBitmap` as:
+                //
+                //   RECT_SIZE * IMAGE_WIDTH * IMAGE_HEIGHT
+                //
+                // It could also be loaded using `mload` of the first 32 bytes
+                // at the memory location pointed by `bitmap`, but this
+                // implementation is a bit cheaper in terms of contract size
+                // (-7 bytes).
+                let bitmapSize := mul(RECT_SIZE, mul(IMAGE_WIDTH, IMAGE_HEIGHT))
+
+                // Compute number of chunks required to copy bitmap data:
+                //
+                //   ceil(bitmapSize / 32)
+                //
+                // In this implementation `gt(mod(bitmapSize, 32), 0)` returns 1
+                // or 0 whether `mod(bitmapSize, 32)` is greater than zero.
+                let chunks := add(
+                    div(bitmapSize, 32),
+                    gt(mod(bitmapSize, 32), 0)
+                )
+                // Copy bitmap data in chunks
+                for {
+                    let i := 0
+                } lt(i, chunks) {
+                    i := add(i, 1)
+                } {
+                    mstore(defsPtr, mload(add(bitmapPtr, mul(i, 32))))
+                    defsPtr := add(defsPtr, 32)
+                }
+
+                // Reset defs ptr
+                defsPtr := add(
+                    add(add(add(defs, 32), defsOffset), bitmapSize),
+                    27 // header (20) + frame id (1) + header closing (6)
+                )
+
+                // Copy <g> footer data
+                mstore(defsPtr, "%253C%252Fg%253E")
+            }
+
+            frameDataOffset += 141;
+            defsOffset += defLength;
+        }
+    }
+
+    function _encodeColorTable(bytes memory data, uint256 dataOffset)
         internal
         pure
         returns (bytes memory colorTable)
     {
         // The first bit in the packed fields is the transparency flag
-        bool hasTransparency = uint8(data[0]) & 0x80 == 0x80;
+        bool hasTransparency = uint8(data[dataOffset]) & 0x80 == 0x80;
         // Bits 2 to 5 in the packed fields are the transparency index
-        uint8 transparencyIndex = (uint8(data[0]) & 0x78) >> 3;
+        uint8 transparencyIndex = (uint8(data[dataOffset]) & 0x78) >> 3;
         // CSS colors in the 24-bit color space (3 bytes) + alpha
         colorTable = new bytes(COLORS_NUMBER * 4);
+        // Skip the first byte that contains packed fields
+        dataOffset++;
         for (uint256 i = 0; i < 4; i++) {
-            // Skip the first byte that contains packed fields
-            uint256 offset = 1 + i * 3;
-            bytes3 colorsPack = bytes3(data[offset]) |
-                (bytes3(data[offset + 1]) >> 8) |
-                (bytes3(data[offset + 2]) >> 16);
+            bytes3 colorsPack = bytes3(data[dataOffset]) |
+                (bytes3(data[dataOffset + 1]) >> 8) |
+                (bytes3(data[dataOffset + 2]) >> 16);
 
             // Extract each color in the 4 colors pack
             //
@@ -321,6 +464,8 @@ library SVG {
                     colorTable[colorIndex + 3] = 0xff;
                 }
             }
+
+            dataOffset += 3;
         }
     }
 
