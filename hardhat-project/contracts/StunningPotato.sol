@@ -151,29 +151,13 @@ contract StunningPotato is
         external
         payable
     {
-        // TODO: Optimize - Remove variable
-        uint256 packedFields = uint8(data[0]);
-        uint256 framesCount = (packedFields >> 4) + 1;
-        uint256 newFramesCount = 0;
+        // Extract frames count from the packed fields
+        uint256 framesCount = (uint8(data[0]) >> 4) + 1;
         _validateAnimationData(data, framesCount);
 
-        // Encode animation storage data
-        //
-        // Animation storage data format is different from the input animation
-        // data format. The difference is that instead of storing the raw data
-        // of each frame, the storage animation data stores just frame ids.
-        //
-        // The trade off is some time spent to compute the new format in
-        // exchange for 141 - 32 = 109 spared bytes per frame.
-        bytes memory storageData = new bytes(
-            APPLICATION_DATA_HEADER_SIZE + 32 * framesCount
-        );
-        // Copy header data
-        storageData[0] = data[0];
-        storageData[1] = data[1];
-
+        uint256 newFramesCount = 0;
+        uint256 offset = APPLICATION_DATA_HEADER_SIZE;
         for (uint256 i = 0; i < framesCount; i++) {
-            uint256 offset = APPLICATION_DATA_HEADER_SIZE + i * FRAME_DATA_SIZE;
             bytes calldata frameData = data[offset:offset + FRAME_DATA_SIZE];
 
             uint256 frameId = uint256(keccak256(frameData));
@@ -184,20 +168,13 @@ contract StunningPotato is
                 _createFrame(author, frameData);
             }
 
-            // Store the frame reference in the animation storage data
-            assembly {
-                let storageDataPtr := add(
-                    storageData,
-                    add(32, add(APPLICATION_DATA_HEADER_SIZE, mul(i, 32)))
-                )
-                mstore(storageDataPtr, frameId)
-            }
+            offset += FRAME_DATA_SIZE;
         }
 
         uint256 totalPrice = PRICE_ANIMATION + newFramesCount * PRICE_FRAME;
         require(msg.value >= totalPrice, "E02");
 
-        _createResource(author, Resource(ResourceType.Animation, storageData));
+        _createResource(author, Resource(ResourceType.Animation, data));
 
         // Send any excess ETH back to the caller
         uint256 excess = msg.value - totalPrice;
@@ -334,49 +311,7 @@ contract StunningPotato is
         if (_resources[tokenId].resourceType == ResourceType.Frame) {
             imageData = SVG.encodeFrame(_resources[tokenId].data);
         } else {
-            // NOTE: Maybe this assignment is redundant and I can access
-            // frame data in Yul directly from the struct
-            bytes memory data = _resources[tokenId].data;
-            uint256 framesCount = (uint8(data[0]) >> 4) + 1;
-            bytes memory animationData = new bytes(
-                APPLICATION_DATA_HEADER_SIZE + FRAME_DATA_SIZE * framesCount
-            );
-            animationData[0] = data[0];
-            animationData[1] = data[1];
-            for (uint256 i = 0; i < framesCount; i++) {
-                bytes32 rawFrameId;
-                assembly {
-                    rawFrameId := mload(add(add(data, 34), mul(i, 32)))
-                }
-                uint256 frameId = uint256(rawFrameId);
-                // NOTE: Maybe this assignment is redundant and I can access
-                // frame data in Yul directly from the struct
-                bytes memory frameData = _resources[frameId].data;
-                assembly {
-                    // Jump over length (32) + frames count (1) + packed fields (1)
-                    let animationDataPtr := add(animationData, 34)
-                    // Jump over length (32)
-                    let frameDataPtr := add(frameData, 32)
-
-                    // Copy until end of the frame data:
-                    //
-                    //   ceil(141 / 32) * 32 = 160
-                    for {
-                        let j := 0
-                    } lt(j, 160) {
-                        j := add(j, 32)
-                    } {
-                        mstore(
-                            add(
-                                add(animationDataPtr, mul(FRAME_DATA_SIZE, i)),
-                                j
-                            ),
-                            mload(add(frameDataPtr, j))
-                        )
-                    }
-                }
-            }
-            imageData = SVG.encodeAnimation(animationData);
+            imageData = SVG.encodeAnimation(_resources[tokenId].data);
         }
 
         metadata = string(
