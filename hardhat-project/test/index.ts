@@ -4,6 +4,12 @@ import { ethers } from "hardhat";
 import { StunningPotato } from "../typechain";
 import { JSDOM } from "jsdom";
 
+const TEST_GAS_COST = true;
+const GAS_COST_CREATE_FRAME = '313382';
+const GAS_COST_CREATE_FRAME_WITH_TRANSPARENCY = '313394';
+const GAS_COST_CREATE_ANIMATION = '541772';
+const GAS_COST_CREATE_ANIMATION_LARGE = '922375';
+
 function encodeColorTable(...colors: number[]): string {
   return [0, 4, 8, 12].reduce(
     (res, offset) =>
@@ -158,12 +164,6 @@ describe("StunningPotato", function () {
 
   const PRICE_FRAME = ethers.utils.parseEther("0.01");
   const PRICE_ANIMATION = ethers.utils.parseEther("0.01");
-
-  const TEST_GAS_COST = false;
-  const GAS_COST_CREATE_FRAME = '313382';
-  const GAS_COST_CREATE_FRAME_WITH_TRANSPARENCY = '313394';
-  const GAS_COST_CREATE_ANIMATION = '440604';
-  const GAS_COST_CREATE_ANIMATION_LARGE = '796187';
 
   // `beforeEach` will run before each test, re-deploying the contract every
   // time. It receives a callback, which can be async.
