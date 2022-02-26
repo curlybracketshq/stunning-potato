@@ -151,10 +151,8 @@ contract StunningPotato is
         external
         payable
     {
-        // TODO: Optimize - Remove variable
-        uint256 packedFields = uint8(data[0]);
-        uint256 framesCount = (packedFields >> 4) + 1;
-        uint256 newFramesCount = 0;
+        // Extract frames count from the packed fields
+        uint256 framesCount = (uint8(data[0]) >> 4) + 1;
         _validateAnimationData(data, framesCount);
 
         // Encode animation storage data
@@ -172,8 +170,9 @@ contract StunningPotato is
         storageData[0] = data[0];
         storageData[1] = data[1];
 
+        uint256 newFramesCount = 0;
+        uint256 offset = APPLICATION_DATA_HEADER_SIZE;
         for (uint256 i = 0; i < framesCount; i++) {
-            uint256 offset = APPLICATION_DATA_HEADER_SIZE + i * FRAME_DATA_SIZE;
             bytes calldata frameData = data[offset:offset + FRAME_DATA_SIZE];
 
             uint256 frameId = uint256(keccak256(frameData));
@@ -192,6 +191,8 @@ contract StunningPotato is
                 )
                 mstore(storageDataPtr, frameId)
             }
+
+            offset += FRAME_DATA_SIZE;
         }
 
         uint256 totalPrice = PRICE_ANIMATION + newFramesCount * PRICE_FRAME;

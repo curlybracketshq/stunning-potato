@@ -7,8 +7,8 @@ import { JSDOM } from "jsdom";
 const TEST_GAS_COST = true;
 const GAS_COST_CREATE_FRAME = '313382';
 const GAS_COST_CREATE_FRAME_WITH_TRANSPARENCY = '313394';
-const GAS_COST_CREATE_ANIMATION = '541772';
-const GAS_COST_CREATE_ANIMATION_LARGE = '922375';
+const GAS_COST_CREATE_ANIMATION = '541703';
+const GAS_COST_CREATE_ANIMATION_LARGE = '920926';
 
 function encodeColorTable(...colors: number[]): string {
   return [0, 4, 8, 12].reduce(
