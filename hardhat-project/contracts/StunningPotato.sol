@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity 0.8.12;
 
 import "hardhat/console.sol";
 
@@ -172,7 +172,7 @@ contract StunningPotato is
 
         uint256 newFramesCount = 0;
         uint256 offset = APPLICATION_DATA_HEADER_SIZE;
-        for (uint256 i = 0; i < framesCount; i++) {
+        for (uint256 i = 0; i < framesCount;) {
             bytes calldata frameData = data[offset:offset + FRAME_DATA_SIZE];
 
             uint256 frameId = uint256(keccak256(frameData));
@@ -192,7 +192,10 @@ contract StunningPotato is
                 mstore(storageDataPtr, frameId)
             }
 
-            offset += FRAME_DATA_SIZE;
+            unchecked {
+              offset += FRAME_DATA_SIZE;
+              i++;
+            }
         }
 
         uint256 totalPrice = PRICE_ANIMATION + newFramesCount * PRICE_FRAME;
@@ -344,7 +347,7 @@ contract StunningPotato is
             );
             animationData[0] = data[0];
             animationData[1] = data[1];
-            for (uint256 i = 0; i < framesCount; i++) {
+            for (uint256 i = 0; i < framesCount;) {
                 bytes32 rawFrameId;
                 assembly {
                     rawFrameId := mload(add(add(data, 34), mul(i, 32)))
@@ -375,6 +378,9 @@ contract StunningPotato is
                             mload(add(frameDataPtr, j))
                         )
                     }
+                }
+                unchecked {
+                  i++;
                 }
             }
             imageData = SVG.encodeAnimation(animationData);

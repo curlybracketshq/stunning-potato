@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity 0.8.12;
 
 import "hardhat/console.sol";
 
@@ -82,12 +82,15 @@ library SVG {
 
         // Refs start always at the first frame that is required to be present
         bytes memory frameRefs = "%2523f0";
-        for (uint256 f = 1; f < framesCount; f++) {
+        for (uint256 f = 1; f < framesCount;) {
             frameRefs = abi.encodePacked(
                 frameRefs,
                 "%253B%2523f",
                 HEX_CHARS[f]
             );
+            unchecked {
+              f++;
+            }
         }
 
         // If the loop style is ping-pong, add all the frames in reverse order
@@ -95,12 +98,15 @@ library SVG {
         // Note: SVG doesn't support this animation style yet, see
         // https://github.com/w3c/svgwg/issues/130
         if (isPingPongLoopStyle) {
-            for (uint256 f = framesCount - 2; f >= 0; f--) {
+            for (uint256 f = framesCount - 2; f >= 0;) {
                 frameRefs = abi.encodePacked(
                     frameRefs,
                     "%253B%2523f",
                     HEX_CHARS[f]
                 );
+                unchecked {
+                  f--;
+                }
             }
         }
 
@@ -298,7 +304,7 @@ library SVG {
         // Offset for storing data in the defs bytes
         uint256 defsOffset = 0;
 
-        for (uint256 f = 0; f < framesCount; f++) {
+        for (uint256 f = 0; f < framesCount;) {
             bytes memory bitmap = _encodeBitmap(data, frameDataOffset);
 
             assembly {
@@ -414,8 +420,11 @@ library SVG {
                 mstore(defsPtr, "%253C%252Fg%253E")
             }
 
-            frameDataOffset += 141;
-            defsOffset += defLength;
+            unchecked {
+              frameDataOffset += 141;
+              defsOffset += defLength;
+              f++;
+            }
         }
     }
 
@@ -432,7 +441,7 @@ library SVG {
         colorTable = new bytes(COLORS_NUMBER * 4);
         // Skip the first byte that contains packed fields
         dataOffset++;
-        for (uint256 i = 0; i < 4; i++) {
+        for (uint256 i = 0; i < 4;) {
             bytes3 colorsPack = bytes3(data[dataOffset]) |
                 (bytes3(data[dataOffset + 1]) >> 8) |
                 (bytes3(data[dataOffset + 2]) >> 16);
@@ -445,7 +454,7 @@ library SVG {
             // 2. colorsPack >> 12 & 0x3f
             // 3. colorsPack >> 6 & 0x3f
             // 4. colorsPack & 0x3f
-            for (uint256 j = 0; j < 4; j++) {
+            for (uint256 j = 0; j < 4;) {
                 // jth color in the 4 colors pack
                 bytes3 color = _encode24BitColor(
                     bytes1((colorsPack >> (6 * (3 - j))) << 16) & 0x3f
@@ -463,9 +472,15 @@ library SVG {
                 } else {
                     colorTable[colorIndex + 3] = 0xff;
                 }
+                unchecked {
+                  j++;
+                }
             }
 
-            dataOffset += 3;
+            unchecked {
+              dataOffset += 3;
+              i++;
+            }
         }
     }
 
