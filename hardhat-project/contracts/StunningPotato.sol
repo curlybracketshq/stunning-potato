@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity 0.8.12;
+
+import "hardhat/console.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -123,7 +125,7 @@ contract StunningPotato is
         returns (uint256 tokenId)
     {
         _validateFrameData(data);
-        tokenId = _createResource(author, data, ResourceType.Frame);
+        tokenId = _createResource(author, Resource(ResourceType.Frame, data));
     }
 
     /**
@@ -149,27 +151,57 @@ contract StunningPotato is
         external
         payable
     {
-        uint256 packedFields = uint8(data[0]);
-        uint256 framesCount = (packedFields >> 4) + 1;
-        uint256 newFramesCount = 0;
+        // Extract frames count from the packed fields
+        uint256 framesCount = (uint8(data[0]) >> 4) + 1;
         _validateAnimationData(data, framesCount);
 
-        for (uint256 i = 0; i < framesCount; i++) {
-            uint256 offset = APPLICATION_DATA_HEADER_SIZE + i * FRAME_DATA_SIZE;
+        // Encode animation storage data
+        //
+        // Animation storage data format is different from the input animation
+        // data format. The difference is that instead of storing the raw data
+        // of each frame, the storage animation data stores just frame ids.
+        //
+        // The trade off is some time spent to compute the new format in
+        // exchange for 141 - 32 = 109 spared bytes per frame.
+        bytes memory storageData = new bytes(
+            APPLICATION_DATA_HEADER_SIZE + 32 * framesCount
+        );
+        // Copy header data
+        storageData[0] = data[0];
+        storageData[1] = data[1];
+
+        uint256 newFramesCount = 0;
+        uint256 offset = APPLICATION_DATA_HEADER_SIZE;
+        for (uint256 i = 0; i < framesCount;) {
             bytes calldata frameData = data[offset:offset + FRAME_DATA_SIZE];
-            // TODO: Use this value to build a list of frame references
+
             uint256 frameId = uint256(keccak256(frameData));
+
+            // Create a new frame if it doesn't exist already
             if (!_exists(frameId)) {
                 newFramesCount++;
                 _createFrame(author, frameData);
+            }
+
+            // Store the frame reference in the animation storage data
+            assembly {
+                let storageDataPtr := add(
+                    storageData,
+                    add(32, add(APPLICATION_DATA_HEADER_SIZE, mul(i, 32)))
+                )
+                mstore(storageDataPtr, frameId)
+            }
+
+            unchecked {
+              offset += FRAME_DATA_SIZE;
+              i++;
             }
         }
 
         uint256 totalPrice = PRICE_ANIMATION + newFramesCount * PRICE_FRAME;
         require(msg.value >= totalPrice, "E02");
 
-        // TODO: Store a list of frame references instead of raw frame data
-        _createResource(author, data, ResourceType.Animation);
+        _createResource(author, Resource(ResourceType.Animation, storageData));
 
         // Send any excess ETH back to the caller
         uint256 excess = msg.value - totalPrice;
@@ -226,15 +258,14 @@ contract StunningPotato is
      *
      * Data must be validated by the caller.
      */
-    function _createResource(
-        address author,
-        bytes calldata data,
-        ResourceType resourceType
-    ) private returns (uint256 tokenId) {
-        tokenId = uint256(keccak256(data));
+    function _createResource(address author, Resource memory resource)
+        private
+        returns (uint256 tokenId)
+    {
+        tokenId = uint256(keccak256(resource.data));
         _safeMint(author, tokenId);
 
-        _resources[tokenId] = Resource(resourceType, data);
+        _resources[tokenId] = resource;
         _authors[tokenId] = author;
     }
 
@@ -307,7 +338,52 @@ contract StunningPotato is
         if (_resources[tokenId].resourceType == ResourceType.Frame) {
             imageData = SVG.encodeFrame(_resources[tokenId].data);
         } else {
-            imageData = SVG.encodeAnimation(_resources[tokenId].data);
+            // NOTE: Maybe this assignment is redundant and I can access
+            // frame data in Yul directly from the struct
+            bytes memory data = _resources[tokenId].data;
+            uint256 framesCount = (uint8(data[0]) >> 4) + 1;
+            bytes memory animationData = new bytes(
+                APPLICATION_DATA_HEADER_SIZE + FRAME_DATA_SIZE * framesCount
+            );
+            animationData[0] = data[0];
+            animationData[1] = data[1];
+            for (uint256 i = 0; i < framesCount;) {
+                bytes32 rawFrameId;
+                assembly {
+                    rawFrameId := mload(add(add(data, 34), mul(i, 32)))
+                }
+                uint256 frameId = uint256(rawFrameId);
+                // NOTE: Maybe this assignment is redundant and I can access
+                // frame data in Yul directly from the struct
+                bytes memory frameData = _resources[frameId].data;
+                assembly {
+                    // Jump over length (32) + frames count (1) + packed fields (1)
+                    let animationDataPtr := add(animationData, 34)
+                    // Jump over length (32)
+                    let frameDataPtr := add(frameData, 32)
+
+                    // Copy until end of the frame data:
+                    //
+                    //   ceil(141 / 32) * 32 = 160
+                    for {
+                        let j := 0
+                    } lt(j, 160) {
+                        j := add(j, 32)
+                    } {
+                        mstore(
+                            add(
+                                add(animationDataPtr, mul(FRAME_DATA_SIZE, i)),
+                                j
+                            ),
+                            mload(add(frameDataPtr, j))
+                        )
+                    }
+                }
+                unchecked {
+                  i++;
+                }
+            }
+            imageData = SVG.encodeAnimation(animationData);
         }
 
         metadata = string(
